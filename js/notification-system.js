@@ -1,14 +1,18 @@
 // 統一された通知システム
 
 class NotificationSystem {
-  static show(message, type = 'info', containerId = null, duration = 4000) {
+  static show(message, type = 'info', containerId = null, duration = null) {
+    // デフォルト期間を設定から取得
+    if (duration === null) {
+      duration = CONFIG.NOTIFICATION_DURATION[type.toUpperCase()] || CONFIG.NOTIFICATION_DURATION.INFO;
+    }
     // 既存の通知をクリア
     if (containerId) {
       this.clear(containerId);
     }
     
     const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
+    notification.className = `${CONFIG.CSS_CLASSES.NOTIFICATION} ${CONFIG.CSS_CLASSES.NOTIFICATION}-${type}`;
     notification.textContent = message;
     
     // 通知コンテナを取得または作成

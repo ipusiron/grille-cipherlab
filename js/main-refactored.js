@@ -4,31 +4,22 @@ let uiController;
 
 // 🔹 グリル作成モード：3x3初期化・回転・6x6生成
 function initBaseMatrix() {
-  const container = document.getElementById("baseMatrix");
+  const container = document.getElementById(CONFIG.DOM_IDS.BASE_MATRIX);
   container.innerHTML = "";
 
-  // 初期値設定：[2,4,1][1,4,3][3,2,2]
-  const initialValues = [
-    [2, 4, 1],
-    [1, 4, 3],
-    [3, 2, 2]
-  ];
+  // 初期値設定：CONFIG.DEFAULT_BASE_MATRIX
+  const initialValues = CONFIG.DEFAULT_BASE_MATRIX;
 
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 3; c++) {
+  for (let r = 0; r < CONFIG.BASE_SIZE; r++) {
+    for (let c = 0; c < CONFIG.BASE_SIZE; c++) {
       const input = document.createElement("input");
       input.type = "number";
-      input.min = "1";
-      input.max = "4";
+      input.min = CONFIG.MATRIX_VALUE_MIN.toString();
+      input.max = CONFIG.MATRIX_VALUE_MAX.toString();
       input.value = initialValues[r][c];
       input.dataset.row = r;
       input.dataset.col = c;
-      input.style.width = "50px";
-      input.style.height = "50px";
-      input.style.textAlign = "center";
-      input.style.fontSize = "18px";
-      input.style.border = "2px solid #ccc";
-      input.style.borderRadius = "6px";
+      Object.assign(input.style, CONFIG.INPUT_STYLES);
       container.appendChild(input);
     }
   }
@@ -36,9 +27,9 @@ function initBaseMatrix() {
 
 // 平文入力チェック
 function checkPlainTextAndUpdateButtons() {
-  const inputField = document.getElementById("plainText");
-  const startButton = document.getElementById("startEncryption");
-  const nextButton = document.getElementById("nextRotation");
+  const inputField = document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT);
+  const startButton = document.getElementById(CONFIG.DOM_IDS.START_ENCRYPTION);
+  const nextButton = document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION);
   
   if (inputField.value.trim() === "") {
     startButton.disabled = true;
@@ -46,38 +37,38 @@ function checkPlainTextAndUpdateButtons() {
   } else {
     startButton.disabled = false;
     // 入力時に既存のエラーをクリア
-    NotificationSystem.clear("encrypt-notifications");
+    NotificationSystem.clear(CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
   }
 }
 
 // 暗号文入力チェック
 function checkCipherTextAndUpdateButtons() {
-  const inputField = document.getElementById("cipherInput");
-  const startButton = document.getElementById("startDecryption");
+  const inputField = document.getElementById(CONFIG.DOM_IDS.CIPHER_INPUT);
+  const startButton = document.getElementById(CONFIG.DOM_IDS.START_DECRYPTION);
   
   if (inputField.value.trim() === "") {
     startButton.disabled = true;
   } else {
     startButton.disabled = false;
     // 入力時に既存のエラーをクリア
-    NotificationSystem.clear("decrypt-notifications");
+    NotificationSystem.clear(CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
   }
 }
 
 // コピー機能
 function copyCipherText() {
-  const text = document.getElementById("cipherText").value;
+  const text = document.getElementById(CONFIG.DOM_IDS.CIPHER_TEXT).value;
   if (!text) {
-    NotificationSystem.warning("コピーする暗号文がありません", "encrypt-notifications");
+    NotificationSystem.warning("コピーする暗号文がありません", CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
     return;
   }
   
   navigator.clipboard.writeText(text).then(() => {
-    const toast = document.getElementById("toast");
+    const toast = document.getElementById(CONFIG.DOM_IDS.TOAST);
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 2000);
   }).catch(error => {
-    NotificationSystem.error("コピーに失敗しました", "encrypt-notifications");
+    NotificationSystem.error("コピーに失敗しました", CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
     console.error("Copy failed:", error);
   });
 }
@@ -105,43 +96,43 @@ document.addEventListener("DOMContentLoaded", () => {
   uiController = new UIController(cipher);
 
   // 平文入力時のチェック
-  document.getElementById("plainText").addEventListener("input", () => {
+  document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT).addEventListener("input", () => {
     checkPlainTextAndUpdateButtons();
-    document.getElementById("nextRotation").disabled = true;
+    document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
   });
   checkPlainTextAndUpdateButtons();
 
   // 暗号文入力時のチェック
-  document.getElementById("cipherInput").addEventListener("input", () => {
+  document.getElementById(CONFIG.DOM_IDS.CIPHER_INPUT).addEventListener("input", () => {
     checkCipherTextAndUpdateButtons();
-    document.getElementById("nextDecryption").disabled = true;
+    document.getElementById(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
   });
   checkCipherTextAndUpdateButtons();
 
   // 暗号化モードのイベント
-  document.getElementById("startEncryption").addEventListener("click", () => {
+  document.getElementById(CONFIG.DOM_IDS.START_ENCRYPTION).addEventListener("click", () => {
     uiController.startEncryption();
   });
   
-  document.getElementById("nextRotation").addEventListener("click", () => {
+  document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION).addEventListener("click", () => {
     uiController.nextRotationStep();
   });
 
   // 復号化モードのイベント
-  document.getElementById("startDecryption").addEventListener("click", () => {
+  document.getElementById(CONFIG.DOM_IDS.START_DECRYPTION).addEventListener("click", () => {
     uiController.startDecryption();
   });
   
-  document.getElementById("nextDecryption").addEventListener("click", () => {
+  document.getElementById(CONFIG.DOM_IDS.NEXT_DECRYPTION).addEventListener("click", () => {
     uiController.nextDecryptionStep();
   });
 
   // その他のイベント
-  document.getElementById("copyCipher").addEventListener("click", copyCipherText);
+  document.getElementById(CONFIG.DOM_IDS.COPY_CIPHER).addEventListener("click", copyCipherText);
 
   // グリル生成
   initBaseMatrix();
-  document.getElementById("generateGrille").addEventListener("click", () => {
+  document.getElementById(CONFIG.DOM_IDS.GENERATE_GRILLE).addEventListener("click", () => {
     uiController.generateGrille();
     // グリル生成後、暗号化・復号化開始ボタンの状態をチェック
     checkPlainTextAndUpdateButtons();
@@ -159,10 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById(target).classList.add("active");
       
       if (target === "encrypt") {
-        document.getElementById("nextRotation").disabled = true;
+        document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
         checkPlainTextAndUpdateButtons();
       } else if (target === "decrypt") {
-        document.getElementById("nextDecryption").disabled = true;
+        document.getElementById(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
         checkCipherTextAndUpdateButtons();
       }
     });

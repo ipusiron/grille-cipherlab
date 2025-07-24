@@ -2,9 +2,9 @@
 
 class GrilleCipher {
   constructor() {
-    this.GRILLE_SIZE = 6;
-    this.BASE_SIZE = 3;
-    this.ROTATION_COUNT = 4;
+    this.GRILLE_SIZE = CONFIG.GRILLE_SIZE;
+    this.BASE_SIZE = CONFIG.BASE_SIZE;
+    this.ROTATION_COUNT = CONFIG.ROTATION_COUNT;
   }
 
   // テキストの正規化（大文字のアルファベットのみ）

@@ -22,7 +22,7 @@ class UIController {
   }
 
   createEmptyGrid() {
-    return Array.from({ length: 6 }, () => Array(6).fill(''));
+    return Array.from({ length: CONFIG.GRILLE_SIZE }, () => Array(CONFIG.GRILLE_SIZE).fill(''));
   }
 
   // DOM要素の取得（キャッシュ）
@@ -33,9 +33,9 @@ class UIController {
   // グリッドスタイルの設定
   setGridStyles(container) {
     container.style.display = "grid";
-    container.style.gridTemplateColumns = "repeat(6, 40px)";
-    container.style.gridTemplateRows = "repeat(6, 40px)";
-    container.style.gap = "4px";
+    container.style.gridTemplateColumns = `repeat(${CONFIG.GRILLE_SIZE}, ${CONFIG.CELL_SIZE}px)`;
+    container.style.gridTemplateRows = `repeat(${CONFIG.GRILLE_SIZE}, ${CONFIG.CELL_SIZE}px)`;
+    container.style.gap = `${CONFIG.GRID_GAP}px`;
     container.style.width = "fit-content";
     container.style.margin = "1em auto";
   }
@@ -43,17 +43,17 @@ class UIController {
   // 回転アニメーション
   applyRotationAnimation(elementId, callback) {
     const element = this.getElement(elementId);
-    element.classList.add("rotate-animation");
+    element.classList.add(CONFIG.CSS_CLASSES.ROTATE_ANIMATION);
     setTimeout(() => {
-      element.classList.remove("rotate-animation");
+      element.classList.remove(CONFIG.CSS_CLASSES.ROTATE_ANIMATION);
       if (callback) callback();
-    }, 400);
+    }, CONFIG.ANIMATION_DURATION);
   }
 
   // セルの作成
   createCell(r, c, content, classes = []) {
     const cell = document.createElement("div");
-    cell.className = "cell";
+    cell.className = CONFIG.CSS_CLASSES.CELL;
     classes.forEach(cls => cell.classList.add(cls));
     cell.id = `cell-${r}-${c}`;
     if (content) cell.textContent = content;
@@ -67,7 +67,7 @@ class UIController {
     // バリデーション
     const errors = ValidationHelper.validateBaseMatrix(base);
     if (errors.length > 0) {
-      NotificationSystem.error(errors[0], "grille-notifications");
+      NotificationSystem.error(errors[0], CONFIG.DOM_IDS.GRILLE_NOTIFICATIONS);
       return null;
     }
     
@@ -77,11 +77,11 @@ class UIController {
       this.renderGrillePreview(grille);
       
       // 成功通知
-      NotificationSystem.success(ErrorMessages.GRILLE_GENERATION_SUCCESS, "grille-notifications");
+      NotificationSystem.success(ErrorMessages.GRILLE_GENERATION_SUCCESS, CONFIG.DOM_IDS.GRILLE_NOTIFICATIONS);
       
       return grille;
     } catch (error) {
-      NotificationSystem.error("グリルの生成中にエラーが発生しました", "grille-notifications");
+      NotificationSystem.error("グリルの生成中にエラーが発生しました", CONFIG.DOM_IDS.GRILLE_NOTIFICATIONS);
       console.error("Grille generation error:", error);
       return null;
     }
@@ -89,8 +89,8 @@ class UIController {
 
   // ベース行列の値を取得
   getBaseMatrixValues() {
-    const inputs = document.querySelectorAll("#baseMatrix input");
-    const matrix = Array.from({ length: 3 }, () => Array(3).fill(0));
+    const inputs = document.querySelectorAll(`#${CONFIG.DOM_IDS.BASE_MATRIX} input`);
+    const matrix = Array.from({ length: CONFIG.BASE_SIZE }, () => Array(CONFIG.BASE_SIZE).fill(0));
     
     inputs.forEach(input => {
       const r = parseInt(input.dataset.row);
@@ -103,7 +103,7 @@ class UIController {
 
   // グリルプレビューの描画
   renderGrillePreview(grille) {
-    const container = this.getElement("grillePreview");
+    const container = this.getElement(CONFIG.DOM_IDS.GRILLE_PREVIEW);
     container.innerHTML = "";
     
     const base = this.getBaseMatrixValues();
@@ -114,12 +114,12 @@ class UIController {
       this.cipher.rotateMatrix(base, 3)
     ];
     
-    const offsets = [[0, 0], [0, 3], [3, 3], [3, 0]];
+    const offsets = CONFIG.GRILLE_OFFSETS;
     
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
+    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
+      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
         const cell = document.createElement("div");
-        cell.className = "cell";
+        cell.className = CONFIG.CSS_CLASSES.CELL;
         
         // 境界線の設定
         if ((r === 0 || r === 3) && (c >= 0 && c <= 5)) cell.style.borderTop = "2px solid #888";
@@ -128,9 +128,9 @@ class UIController {
         if ((c === 2 || c === 5) && (r >= 0 && r <= 5)) cell.style.borderRight = "2px solid #888";
         
         // 領域の値を表示
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < CONFIG.ROTATION_COUNT; i++) {
           const [rowOffset, colOffset] = offsets[i];
-          if (r >= rowOffset && r < rowOffset + 3 && c >= colOffset && c < colOffset + 3) {
+          if (r >= rowOffset && r < rowOffset + CONFIG.BASE_SIZE && c >= colOffset && c < colOffset + CONFIG.BASE_SIZE) {
             const localR = r - rowOffset;
             const localC = c - colOffset;
             const val = regions[i][localR][localC];
@@ -142,7 +142,7 @@ class UIController {
         
         // グリルの穴を表示
         if (grille[r][c]) {
-          cell.classList.add("cell-hole");
+          cell.classList.add(CONFIG.CSS_CLASSES.CELL_HOLE);
           const mark = document.createElement("div");
           mark.textContent = "○";
           mark.style.position = "absolute";
@@ -162,7 +162,7 @@ class UIController {
 
   // 暗号化の開始
   startEncryption() {
-    const inputField = this.getElement("plainText");
+    const inputField = this.getElement(CONFIG.DOM_IDS.PLAIN_TEXT);
     
     // 入力検証
     const textErrors = ValidationHelper.validateNotEmpty(inputField.value, "平文");
@@ -230,8 +230,8 @@ class UIController {
     );
     const holeSet = new Set(holes.map(([r, c]) => `${r},${c}`));
     
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
+    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
+      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
         const isHole = holeSet.has(`${r},${c}`);
         const content = this.state.encryptionGrid[r][c];
         const classes = [];
@@ -249,8 +249,8 @@ class UIController {
   // 最終暗号文の表示
   showFinalCipher() {
     let result = "";
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
+    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
+      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
         result += this.state.encryptionGrid[r][c] || "";
       }
     }
@@ -291,8 +291,8 @@ class UIController {
     
     // 暗号文をグリッドに配置
     let index = 0;
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
+    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
+      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
         this.state.decryptionGrid[r][c] = this.state.cipherChars[index++] || "";
       }
     }
@@ -346,8 +346,8 @@ class UIController {
     const holeSet = new Set(holes.map(([r, c]) => `${r},${c}`));
     const highlightSet = new Set(highlight.map(([r, c]) => `${r},${c}`));
     
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
+    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
+      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
         const isHole = holeSet.has(`${r},${c}`);
         const isHighlight = highlightSet.has(`${r},${c}`);
         const content = this.state.decryptionGrid[r][c];
