@@ -340,7 +340,7 @@ class UIController {
     
     // 進捗表示を更新
     const nextChars = this.state.decryptionStep < CONFIG.ROTATION_COUNT ? this.getNextStepCharCount(this.state.decryptionStep) : 0;
-    this.updateDecryptionProgress(this.state.decryptionStep - 1, this.state.recoveredText.length, nextChars);
+    this.updateDecryptionProgress(this.state.decryptionStep, this.state.recoveredText.length, nextChars);
     
     if (this.state.decryptionStep >= CONFIG.ROTATION_COUNT) {
       this.getElement(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
@@ -441,13 +441,14 @@ class UIController {
     // 進捗コンテナを表示
     progressContainer.style.display = 'block';
     
-    // ステップ情報
-    stepInfo.textContent = `ステップ ${step + 1}/${CONFIG.ROTATION_COUNT}`;
+    // ステップ情報（復号化は現在実行中のステップを表示）
+    const displayStep = step === 0 ? 1 : Math.min(step, CONFIG.ROTATION_COUNT);
+    stepInfo.textContent = `ステップ ${displayStep}/${CONFIG.ROTATION_COUNT}`;
     
     // 文字情報
     charInfo.textContent = `${totalRecovered} 文字復号済み`;
     
-    // 進捗バー
+    // 進捗バー（復号化は完了ステップ数ベース）
     const percentage = (step / CONFIG.ROTATION_COUNT) * 100;
     progressBar.style.width = `${percentage}%`;
     
