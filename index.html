@@ -11,6 +11,7 @@
   <h1>🌀 Grille CipherLab</h1>
     <p>回転グリル暗号の仕組みを体験できるツール</p>
     <div style="text-align: right; margin-bottom: 1em;">
+      <button id="helpButton" title="ヘルプ">❓</button>
       <button id="themeToggle" title="テーマ切り替え">☀️</button>
       <button id="showShortcutHelp">⌨️ ショートカット</button>
     </div>
@@ -105,6 +106,105 @@
       </a>）
     </div>
   </footer>
+
+  <!-- ヘルプモーダル -->
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📖 Grille CipherLab ヘルプ</h2>
+        <button id="helpModalClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <section>
+          <h3>🌀 回転グリル暗号とは</h3>
+          <p>回転グリル暗号は、穴の開いたカード（グリル）を使って文字を配置し、カードを回転させながら暗号化・復号化を行う古典暗号です。</p>
+          <p>本ツールでは、3×3のベースマトリクスから6×6のグリルを自動生成し、4回の回転（0°、90°、180°、270°）で暗号化・復号化を行います。</p>
+        </section>
+
+        <section>
+          <h3>📝 使い方</h3>
+          <h4>1. グリル作成</h4>
+          <ul>
+            <li>3×3のマトリクスに1〜4の数字を入力</li>
+            <li>各数字は回転時に穴となる位置を示します</li>
+            <li>「→ グリル生成」ボタンでグリルを作成</li>
+          </ul>
+
+          <h4>2. 暗号化</h4>
+          <ul>
+            <li>平文を入力（最大36文字）</li>
+            <li>「暗号化開始」ボタンで開始</li>
+            <li>「▶進む」ボタンで各回転ステップを実行</li>
+            <li>4回転で全ての文字が配置されます</li>
+          </ul>
+
+          <h4>3. 復号化</h4>
+          <ul>
+            <li>暗号文を入力</li>
+            <li>「復号開始」ボタンで開始</li>
+            <li>「▶進む」ボタンで各回転ステップを実行</li>
+            <li>グリルの穴から文字を読み取って平文を復元</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>⌨️ キーボードショートカット</h3>
+          <table class="help-table">
+            <tr>
+              <th>キー</th>
+              <th>機能</th>
+              <th>使用場面</th>
+            </tr>
+            <tr>
+              <td><kbd>Enter</kbd></td>
+              <td>開始ボタン</td>
+              <td>全モード</td>
+            </tr>
+            <tr>
+              <td><kbd>Space</kbd></td>
+              <td>進むボタン</td>
+              <td>暗号化・復号化</td>
+            </tr>
+            <tr>
+              <td><kbd>Esc</kbd></td>
+              <td>リセット</td>
+              <td>全モード</td>
+            </tr>
+            <tr>
+              <td><kbd>Ctrl+C</kbd></td>
+              <td>暗号文コピー</td>
+              <td>暗号化完了時</td>
+            </tr>
+          </table>
+        </section>
+
+        <section>
+          <h3>🎨 テーマ設定</h3>
+          <p>画面右上のボタンでテーマを切り替えられます：</p>
+          <ul>
+            <li>☀️ ライトモード</li>
+            <li>🌙 ダークモード</li>
+            <li>🔄 システム連動</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>💡 ヒント</h3>
+          <ul>
+            <li>グリルの穴の配置が暗号の鍵となります</li>
+            <li>同じグリルがないと復号できません</li>
+            <li>平文は英字のみ対応（空白・記号は自動除去）</li>
+            <li>進捗バーで現在の状態を確認できます</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>🔗 詳細情報</h3>
+          <p>より詳しい説明や技術情報は、<a href="https://github.com/ipusiron/grille-cipherlab" target="_blank">GitHubリポジトリ</a>をご覧ください。</p>
+        </section>
+      </div>
+    </div>
+  </div>
 
   <script src="js/config.js"></script>
   <script src="js/grille-cipher-logic.js"></script>

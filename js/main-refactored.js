@@ -144,6 +144,39 @@ document.addEventListener("DOMContentLoaded", () => {
     themeManager.toggleTheme();
   });
 
+  // ヘルプモーダル
+  const helpButton = document.getElementById(CONFIG.DOM_IDS.HELP_BUTTON);
+  const helpModal = document.getElementById(CONFIG.DOM_IDS.HELP_MODAL);
+  const helpClose = document.getElementById(CONFIG.DOM_IDS.HELP_CLOSE);
+
+  // ヘルプボタンクリック
+  helpButton.addEventListener("click", () => {
+    helpModal.classList.add("show");
+    document.body.style.overflow = "hidden"; // スクロール無効化
+  });
+
+  // 閉じるボタンクリック
+  helpClose.addEventListener("click", () => {
+    helpModal.classList.remove("show");
+    document.body.style.overflow = ""; // スクロール復活
+  });
+
+  // オーバーレイクリックで閉じる
+  helpModal.addEventListener("click", (e) => {
+    if (e.target === helpModal) {
+      helpModal.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+  });
+
+  // ESCキーで閉じる
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && helpModal.classList.contains("show")) {
+      helpModal.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+  });
+
   // グリル生成
   initBaseMatrix();
   document.getElementById(CONFIG.DOM_IDS.GENERATE_GRILLE).addEventListener("click", () => {

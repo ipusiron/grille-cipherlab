@@ -565,3 +565,240 @@ a:hover {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.25);
 }
+
+/* ヘルプボタン */
+#helpButton {
+  background: var(--bg-secondary) !important;
+  border: 2px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+  padding: 0.4em 0.8em;
+  border-radius: 6px;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  outline: none;
+  text-decoration: none;
+  margin-right: 0.5em;
+}
+
+#helpButton:hover {
+  background: var(--btn-primary-bg) !important;
+  border-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#helpButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#helpButton:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.25);
+}
+
+/* モーダル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  max-height: 90vh;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  animation: slideInFromTop 0.3s ease-out;
+  transition: background-color 0.3s ease;
+}
+
+.modal-header {
+  padding: 1.5em 2em 1em 2em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-secondary);
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: var(--cell-faded);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 1.5em 2em 2em 2em;
+  overflow-y: auto;
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.modal-body section {
+  margin-bottom: 2em;
+}
+
+.modal-body section:last-child {
+  margin-bottom: 0;
+}
+
+.modal-body h3 {
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  margin-bottom: 1em;
+  border-bottom: 2px solid var(--border-secondary);
+  padding-bottom: 0.5em;
+}
+
+.modal-body h4 {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 1em 0 0.5em 0;
+}
+
+.modal-body p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1em;
+}
+
+.modal-body ul {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.modal-body li {
+  margin-bottom: 0.5em;
+}
+
+.modal-body a {
+  color: var(--btn-primary-bg);
+  text-decoration: none;
+}
+
+.modal-body a:hover {
+  text-decoration: underline;
+}
+
+/* ヘルプテーブル */
+.help-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.help-table th,
+.help-table td {
+  padding: 0.8em 1em;
+  text-align: left;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.help-table th {
+  background-color: var(--cell-faded);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.help-table td {
+  color: var(--text-secondary);
+}
+
+.help-table tr:last-child td {
+  border-bottom: none;
+}
+
+.help-table kbd {
+  background-color: var(--cell-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  padding: 0.2em 0.5em;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* モーダルアニメーション */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* スクロールバーのカスタマイズ（Webkit系ブラウザ） */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

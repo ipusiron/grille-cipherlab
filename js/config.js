@@ -95,7 +95,10 @@ const CONFIG = {
     
     // 共通
     TOAST: 'toast',
-    THEME_TOGGLE: 'themeToggle'
+    THEME_TOGGLE: 'themeToggle',
+    HELP_BUTTON: 'helpButton',
+    HELP_MODAL: 'helpModal',
+    HELP_CLOSE: 'helpModalClose'
   },
   
   // 回転角度
