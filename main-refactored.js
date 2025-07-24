@@ -48,6 +48,18 @@ function checkPlainTextAndUpdateButtons() {
   }
 }
 
+// 暗号文入力チェック
+function checkCipherTextAndUpdateButtons() {
+  const inputField = document.getElementById("cipherInput");
+  const startButton = document.getElementById("startDecryption");
+  
+  if (inputField.value.trim() === "") {
+    startButton.disabled = true;
+  } else {
+    startButton.disabled = false;
+  }
+}
+
 // コピー機能
 function copyCipherText() {
   const text = document.getElementById("cipherText").value;
@@ -83,6 +95,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   checkPlainTextAndUpdateButtons();
 
+  // 暗号文入力時のチェック
+  document.getElementById("cipherInput").addEventListener("input", () => {
+    checkCipherTextAndUpdateButtons();
+    document.getElementById("nextDecryption").disabled = true;
+  });
+  checkCipherTextAndUpdateButtons();
+
   // 暗号化モードのイベント
   document.getElementById("startEncryption").addEventListener("click", () => {
     uiController.startEncryption();
@@ -108,6 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initBaseMatrix();
   document.getElementById("generateGrille").addEventListener("click", () => {
     uiController.generateGrille();
+    // グリル生成後、暗号化・復号化開始ボタンの状態をチェック
+    checkPlainTextAndUpdateButtons();
+    checkCipherTextAndUpdateButtons();
   });
 
   // タブ切り替え
@@ -123,6 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (target === "encrypt") {
         document.getElementById("nextRotation").disabled = true;
         checkPlainTextAndUpdateButtons();
+      } else if (target === "decrypt") {
+        document.getElementById("nextDecryption").disabled = true;
+        checkCipherTextAndUpdateButtons();
       }
     });
   });

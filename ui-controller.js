@@ -146,6 +146,10 @@ class UIController {
   startEncryption() {
     const inputField = this.getElement("plainText");
     if (inputField.value.trim() === "") return;
+    if (!this.state.currentGrille) {
+      alert("先にグリルを生成してください");
+      return;
+    }
     
     const normalizedText = this.cipher.normalizeText(inputField.value);
     this.state.plainChars = normalizedText.split('');
@@ -227,7 +231,14 @@ class UIController {
 
   // 復号化の開始
   startDecryption() {
-    const input = this.cipher.normalizeText(this.getElement("cipherInput").value);
+    const cipherInput = this.getElement("cipherInput").value;
+    if (cipherInput.trim() === "") return;
+    if (!this.state.currentGrille) {
+      alert("先にグリルを生成してください");
+      return;
+    }
+    
+    const input = this.cipher.normalizeText(cipherInput);
     this.state.cipherChars = input.split('');
     this.state.decryptionGrid = this.createEmptyGrid();
     this.state.decryptionStep = 0;
@@ -349,6 +360,7 @@ class UIController {
     this.getElement("recoveredText").value = "";
     this.getElement("cipherInput").value = "";
     this.getElement("nextDecryption").disabled = true;
+    this.getElement("startDecryption").disabled = true; // 初期状態では無効
     this.updateRotationLabel("decryptionRotationLabel", 0);
     
     const container = this.getElement("decryptionGrid");
