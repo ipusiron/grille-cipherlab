@@ -37,9 +37,22 @@ function checkPlainTextAndUpdateButtons() {
     startButton.disabled = true;
     nextButton.disabled = true;
   } else {
-    startButton.disabled = false;
-    // 入力時に既存のエラーをクリア
-    NotificationSystem.clear(CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
+    // 文字種検証
+    const charValidation = ValidationHelper.validateTextCharacters(inputField.value);
+    if (charValidation.errors.length > 0) {
+      startButton.disabled = true;
+      nextButton.disabled = true;
+      NotificationSystem.error(charValidation.errors[0], CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
+    } else {
+      startButton.disabled = false;
+      // 入力時に既存のエラーをクリア
+      NotificationSystem.clear(CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
+      
+      // 警告があれば表示（ボタンは有効のまま）
+      if (charValidation.warnings.length > 0) {
+        NotificationSystem.warning(charValidation.warnings[0], CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
+      }
+    }
   }
 }
 
@@ -51,9 +64,21 @@ function checkCipherTextAndUpdateButtons() {
   if (inputField.value.trim() === "") {
     startButton.disabled = true;
   } else {
-    startButton.disabled = false;
-    // 入力時に既存のエラーをクリア
-    NotificationSystem.clear(CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
+    // 文字種検証
+    const charValidation = ValidationHelper.validateTextCharacters(inputField.value);
+    if (charValidation.errors.length > 0) {
+      startButton.disabled = true;
+      NotificationSystem.error(charValidation.errors[0], CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
+    } else {
+      startButton.disabled = false;
+      // 入力時に既存のエラーをクリア
+      NotificationSystem.clear(CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
+      
+      // 警告があれば表示（ボタンは有効のまま）
+      if (charValidation.warnings.length > 0) {
+        NotificationSystem.warning(charValidation.warnings[0], CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
+      }
+    }
   }
 }
 

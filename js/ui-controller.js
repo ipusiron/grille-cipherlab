@@ -171,6 +171,13 @@ class UIController {
       return;
     }
     
+    // 文字種検証
+    const charValidation = ValidationHelper.validateTextCharacters(inputField.value);
+    if (charValidation.errors.length > 0) {
+      NotificationSystem.error(charValidation.errors[0], "encrypt-notifications");
+      return;
+    }
+    
     const lengthErrors = ValidationHelper.validateTextLength(inputField.value);
     if (lengthErrors.length > 0) {
       NotificationSystem.warning(lengthErrors[0], "encrypt-notifications");
@@ -184,6 +191,11 @@ class UIController {
     
     // エラーなしの場合、既存の通知をクリア
     NotificationSystem.clear("encrypt-notifications");
+    
+    // 警告メッセージがあれば表示（処理は継続）
+    if (charValidation.warnings.length > 0) {
+      NotificationSystem.warning(charValidation.warnings[0], "encrypt-notifications");
+    }
     
     const normalizedText = this.cipher.normalizeText(inputField.value);
     this.state.plainChars = normalizedText.split('');
@@ -286,6 +298,13 @@ class UIController {
       return;
     }
     
+    // 文字種検証
+    const charValidation = ValidationHelper.validateTextCharacters(cipherInput);
+    if (charValidation.errors.length > 0) {
+      NotificationSystem.error(charValidation.errors[0], "decrypt-notifications");
+      return;
+    }
+    
     if (!this.state.currentGrille) {
       NotificationSystem.error(ErrorMessages.GRILLE_NOT_GENERATED, "decrypt-notifications");
       return;
@@ -293,6 +312,11 @@ class UIController {
     
     // エラーなしの場合、既存の通知をクリア
     NotificationSystem.clear("decrypt-notifications");
+    
+    // 警告メッセージがあれば表示（処理は継続）
+    if (charValidation.warnings.length > 0) {
+      NotificationSystem.warning(charValidation.warnings[0], "decrypt-notifications");
+    }
     
     const input = this.cipher.normalizeText(cipherInput);
     this.state.cipherChars = input.split('');

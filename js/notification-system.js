@@ -80,6 +80,8 @@ class ErrorMessages {
   static DUPLICATE_VALUES = "マトリクスに重複する値があります";
   static MISSING_VALUES = "1〜4の値がすべて含まれている必要があります";
   static TEXT_TOO_LONG = "テキストが長すぎます（最大36文字）";
+  static INVALID_CHARACTERS = "無効な文字が含まれています。英字のみ使用できます";
+  static IGNORED_CHARACTERS_WARNING = "空白・数字・記号は自動的に除去されます";
   static GRILLE_GENERATION_SUCCESS = "グリルが正常に生成されました";
   static ENCRYPTION_COMPLETE = "暗号化が完了しました";
   static DECRYPTION_COMPLETE = "復号化が完了しました";
@@ -115,6 +117,41 @@ class ValidationHelper {
     return errors;
   }
   
+  static validateTextCharacters(text) {
+    const errors = [];
+    const warnings = [];
+    
+    // 無視される文字（半角スペース、ピリオド、カンマ、ハイフン、数字など）
+    const ignorableChars = /[\s.,\-0-9]/g;
+    
+    // 有効な文字（英字のみ）
+    const validChars = /[A-Za-z]/g;
+    
+    // 無効な文字（英字でも無視可能文字でもない）
+    const textWithoutIgnorable = text.replace(ignorableChars, '');
+    const textWithoutValid = textWithoutIgnorable.replace(validChars, '');
+    
+    // 無効な文字があるかチェック
+    if (textWithoutValid.length > 0) {
+      // 日本語や他の無効文字が含まれている
+      const invalidChars = [...new Set(textWithoutValid)].join('');
+      errors.push(`${ErrorMessages.INVALID_CHARACTERS}（無効文字: ${invalidChars}）`);
+    }
+    
+    // 無視される文字があるかチェック（警告）
+    const ignoredChars = text.match(ignorableChars);
+    if (ignoredChars && ignoredChars.length > 0) {
+      const uniqueIgnored = [...new Set(ignoredChars)].map(char => {
+        // 空白文字を明示的に表示
+        if (char === ' ') return '空白';
+        return char;
+      }).join('');
+      warnings.push(`${ErrorMessages.IGNORED_CHARACTERS_WARNING}（除去文字: ${uniqueIgnored}）`);
+    }
+    
+    return { errors, warnings };
+  }
+
   static validateTextLength(text, maxLength = 36) {
     const normalizedText = text.toUpperCase().replace(/[^A-Z]/g, '');
     if (normalizedText.length > maxLength) {
