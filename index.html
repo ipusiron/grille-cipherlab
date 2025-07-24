@@ -41,9 +41,11 @@
     <div style="margin-top: 1em;">
       <label for="cipherText">暗号文：</label>
       <textarea id="cipherText" rows="2" readonly></textarea>
-      <button id="copyCipher">コピー</button>
+      <div style="position: relative; display: inline-block;">
+        <button id="copyCipher">コピー</button>
+        <div id="toast" class="toast">コピーしました</div>
+      </div>
     </div>
-    <div id="toast" class="toast">コピーしました</div>
   </section>
 
   <!-- モード③ 復号 -->
