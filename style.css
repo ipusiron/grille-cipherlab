@@ -239,3 +239,63 @@ a:hover {
   gap: 4px;
   transform-origin: center center;
 }
+
+/* 通知システム */
+.notification {
+  padding: 0.8em 1.2em;
+  margin: 0.5em 0;
+  border-radius: 6px;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification-error {
+  background-color: #fee;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+}
+
+.notification-warning {
+  background-color: #fffbeb;
+  color: #d69e2e;
+  border: 1px solid #fbd38d;
+}
+
+.notification-success {
+  background-color: #f0fff4;
+  color: #38a169;
+  border: 1px solid #9ae6b4;
+}
+
+.notification-info {
+  background-color: #ebf8ff;
+  color: #3182ce;
+  border: 1px solid #90cdf4;
+}
+
+.notification::before {
+  content: "ℹ️";
+  font-size: 1.2em;
+}
+
+.notification-error::before { content: "❌"; }
+.notification-warning::before { content: "⚠️"; }
+.notification-success::before { content: "✅"; }
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-container {
+  margin: 0.5em 0;
+}

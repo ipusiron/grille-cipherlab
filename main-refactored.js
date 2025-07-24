@@ -45,6 +45,8 @@ function checkPlainTextAndUpdateButtons() {
     nextButton.disabled = true;
   } else {
     startButton.disabled = false;
+    // 入力時に既存のエラーをクリア
+    NotificationSystem.clear("encrypt-notifications");
   }
 }
 
@@ -57,16 +59,26 @@ function checkCipherTextAndUpdateButtons() {
     startButton.disabled = true;
   } else {
     startButton.disabled = false;
+    // 入力時に既存のエラーをクリア
+    NotificationSystem.clear("decrypt-notifications");
   }
 }
 
 // コピー機能
 function copyCipherText() {
   const text = document.getElementById("cipherText").value;
+  if (!text) {
+    NotificationSystem.warning("コピーする暗号文がありません", "encrypt-notifications");
+    return;
+  }
+  
   navigator.clipboard.writeText(text).then(() => {
     const toast = document.getElementById("toast");
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 2000);
+  }).catch(error => {
+    NotificationSystem.error("コピーに失敗しました", "encrypt-notifications");
+    console.error("Copy failed:", error);
   });
 }
 
@@ -74,6 +86,10 @@ function copyCipherText() {
 function resetAllModes() {
   uiController.initEncryptionMode();
   uiController.initDecryptionMode();
+  
+  // すべての通知をクリア
+  NotificationSystem.clearAll();
+  
   const sections = document.querySelectorAll(".tab-content");
   sections.forEach(sec => sec.classList.remove("active"));
   document.getElementById("grille").classList.add("active");

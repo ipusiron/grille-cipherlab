@@ -24,6 +24,7 @@
     <p>3×3マトリクスを基に、6×6の回転グリルを生成します。</p>
     <div id="baseMatrix"></div>
     <button id="generateGrille">→ グリル生成</button>
+    <div id="grille-notifications" class="notification-container"></div>
     <div id="grillePreview"></div>
   </section>
 
@@ -37,6 +38,7 @@
     <button id="startEncryption">暗号化開始</button>
     <button id="nextRotation" disabled>▶進む</button>
     <div id="rotationLabel">回転：0度</div>
+    <div id="encrypt-notifications" class="notification-container"></div>
     <div id="encryptionGrid"></div>
     <div style="margin-top: 1em;">
       <label for="cipherText">暗号文：</label>
@@ -57,6 +59,7 @@
     <button id="startDecryption">復号開始</button>
     <button id="nextDecryption" disabled>▶進む</button>
     <div id="decryptionRotationLabel">回転：0度</div>
+    <div id="decrypt-notifications" class="notification-container"></div>
     <div id="decryptionGrid"></div>
     <div style="margin-top: 1em;">
       <label for="recoveredText">復号結果：</label>
@@ -74,6 +77,7 @@
   </footer>
 
   <script src="grille-cipher-logic.js"></script>
+  <script src="notification-system.js"></script>
   <script src="ui-controller.js"></script>
   <script src="main-refactored.js"></script>
 </body>

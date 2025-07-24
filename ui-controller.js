@@ -63,10 +63,28 @@ class UIController {
   // グリル生成
   generateGrille() {
     const base = this.getBaseMatrixValues();
-    const grille = this.cipher.generateGrille(base);
-    this.state.currentGrille = grille;
-    this.renderGrillePreview(grille);
-    return grille;
+    
+    // バリデーション
+    const errors = ValidationHelper.validateBaseMatrix(base);
+    if (errors.length > 0) {
+      NotificationSystem.error(errors[0], "grille-notifications");
+      return null;
+    }
+    
+    try {
+      const grille = this.cipher.generateGrille(base);
+      this.state.currentGrille = grille;
+      this.renderGrillePreview(grille);
+      
+      // 成功通知
+      NotificationSystem.success(ErrorMessages.GRILLE_GENERATION_SUCCESS, "grille-notifications");
+      
+      return grille;
+    } catch (error) {
+      NotificationSystem.error("グリルの生成中にエラーが発生しました", "grille-notifications");
+      console.error("Grille generation error:", error);
+      return null;
+    }
   }
 
   // ベース行列の値を取得
@@ -145,11 +163,27 @@ class UIController {
   // 暗号化の開始
   startEncryption() {
     const inputField = this.getElement("plainText");
-    if (inputField.value.trim() === "") return;
-    if (!this.state.currentGrille) {
-      alert("先にグリルを生成してください");
+    
+    // 入力検証
+    const textErrors = ValidationHelper.validateNotEmpty(inputField.value, "平文");
+    if (textErrors.length > 0) {
+      NotificationSystem.error(textErrors[0], "encrypt-notifications");
       return;
     }
+    
+    const lengthErrors = ValidationHelper.validateTextLength(inputField.value);
+    if (lengthErrors.length > 0) {
+      NotificationSystem.warning(lengthErrors[0], "encrypt-notifications");
+      return;
+    }
+    
+    if (!this.state.currentGrille) {
+      NotificationSystem.error(ErrorMessages.GRILLE_NOT_GENERATED, "encrypt-notifications");
+      return;
+    }
+    
+    // エラーなしの場合、既存の通知をクリア
+    NotificationSystem.clear("encrypt-notifications");
     
     const normalizedText = this.cipher.normalizeText(inputField.value);
     this.state.plainChars = normalizedText.split('');
@@ -180,6 +214,7 @@ class UIController {
     } else {
       this.getElement("nextRotation").disabled = true;
       this.showFinalCipher();
+      NotificationSystem.success(ErrorMessages.ENCRYPTION_COMPLETE, "encrypt-notifications");
     }
   }
 
@@ -232,11 +267,21 @@ class UIController {
   // 復号化の開始
   startDecryption() {
     const cipherInput = this.getElement("cipherInput").value;
-    if (cipherInput.trim() === "") return;
-    if (!this.state.currentGrille) {
-      alert("先にグリルを生成してください");
+    
+    // 入力検証
+    const textErrors = ValidationHelper.validateNotEmpty(cipherInput, "暗号文");
+    if (textErrors.length > 0) {
+      NotificationSystem.error(textErrors[0], "decrypt-notifications");
       return;
     }
+    
+    if (!this.state.currentGrille) {
+      NotificationSystem.error(ErrorMessages.GRILLE_NOT_GENERATED, "decrypt-notifications");
+      return;
+    }
+    
+    // エラーなしの場合、既存の通知をクリア
+    NotificationSystem.clear("decrypt-notifications");
     
     const input = this.cipher.normalizeText(cipherInput);
     this.state.cipherChars = input.split('');
@@ -279,6 +324,7 @@ class UIController {
     this.state.decryptionStep++;
     if (this.state.decryptionStep >= 4) {
       this.getElement("nextDecryption").disabled = true;
+      NotificationSystem.success(ErrorMessages.DECRYPTION_COMPLETE, "decrypt-notifications");
     } else {
       this.applyRotationAnimation("decryptionGrid", () => {
         this.updateRotationLabel("decryptionRotationLabel", this.state.decryptionStep);
