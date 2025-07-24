@@ -70,6 +70,13 @@ const CONFIG = {
     COPY_CIPHER: 'copyCipher',
     ENCRYPT_NOTIFICATIONS: 'encrypt-notifications',
     
+    // 暗号化進捗表示
+    ENCRYPTION_PROGRESS: 'encryptionProgress',
+    ENCRYPTION_STEP_INFO: 'encryptionStepInfo',
+    ENCRYPTION_CHAR_INFO: 'encryptionCharInfo',
+    ENCRYPTION_PROGRESS_BAR: 'encryptionProgressBar',
+    ENCRYPTION_NEXT_INFO: 'encryptionNextInfo',
+    
     // 復号化
     CIPHER_INPUT: 'cipherInput',
     START_DECRYPTION: 'startDecryption',
@@ -78,6 +85,13 @@ const CONFIG = {
     DECRYPTION_GRID: 'decryptionGrid',
     RECOVERED_TEXT: 'recoveredText',
     DECRYPT_NOTIFICATIONS: 'decrypt-notifications',
+    
+    // 復号化進捗表示
+    DECRYPTION_PROGRESS: 'decryptionProgress',
+    DECRYPTION_STEP_INFO: 'decryptionStepInfo',
+    DECRYPTION_CHAR_INFO: 'decryptionCharInfo',
+    DECRYPTION_PROGRESS_BAR: 'decryptionProgressBar',
+    DECRYPTION_NEXT_INFO: 'decryptionNextInfo',
     
     // 共通
     TOAST: 'toast'

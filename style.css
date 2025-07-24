@@ -299,3 +299,56 @@ a:hover {
 .notification-container {
   margin: 0.5em 0;
 }
+
+/* 詳細進捗表示 */
+.progress-container {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1em;
+  margin: 1em 0;
+  font-size: 0.9em;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8em;
+  font-weight: 500;
+}
+
+.progress-info span {
+  color: #495057;
+}
+
+.progress-bar {
+  background: #e9ecef;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 0.6em;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #28a745, #20c997);
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.next-info {
+  color: #6c757d;
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+/* 暗号化と復号で色を少し変える */
+#encryptionProgress .progress-fill {
+  background: linear-gradient(90deg, #007bff, #17a2b8);
+}
+
+#decryptionProgress .progress-fill {
+  background: linear-gradient(90deg, #fd7e14, #ffc107);
+}

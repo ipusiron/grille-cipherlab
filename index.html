@@ -38,6 +38,19 @@
     <button id="startEncryption">暗号化開始</button>
     <button id="nextRotation" disabled>▶進む</button>
     <div id="rotationLabel">回転：0度</div>
+    
+    <!-- 詳細進捗表示 -->
+    <div id="encryptionProgress" class="progress-container" style="display: none;">
+      <div class="progress-info">
+        <span id="encryptionStepInfo">ステップ 1/4</span>
+        <span id="encryptionCharInfo">0/36 文字埋込済み</span>
+      </div>
+      <div class="progress-bar">
+        <div id="encryptionProgressBar" class="progress-fill"></div>
+      </div>
+      <div id="encryptionNextInfo" class="next-info">次：9文字を埋め込みます</div>
+    </div>
+    
     <div id="encrypt-notifications" class="notification-container"></div>
     <div id="encryptionGrid"></div>
     <div style="margin-top: 1em;">
@@ -59,6 +72,19 @@
     <button id="startDecryption">復号開始</button>
     <button id="nextDecryption" disabled>▶進む</button>
     <div id="decryptionRotationLabel">回転：0度</div>
+    
+    <!-- 詳細進捗表示 -->
+    <div id="decryptionProgress" class="progress-container" style="display: none;">
+      <div class="progress-info">
+        <span id="decryptionStepInfo">ステップ 1/4</span>
+        <span id="decryptionCharInfo">0 文字復号済み</span>
+      </div>
+      <div class="progress-bar">
+        <div id="decryptionProgressBar" class="progress-fill"></div>
+      </div>
+      <div id="decryptionNextInfo" class="next-info">次：9文字を読み取ります</div>
+    </div>
+    
     <div id="decrypt-notifications" class="notification-container"></div>
     <div id="decryptionGrid"></div>
     <div style="margin-top: 1em;">

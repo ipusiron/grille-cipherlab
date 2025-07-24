@@ -194,6 +194,11 @@ class UIController {
     this.getElement("nextRotation").disabled = true;
     this.getElement("cipherText").value = "";
     
+    // 進捗表示の初期化
+    const totalChars = normalizedText.length;
+    const nextChars = this.getNextStepCharCount(0);
+    this.updateEncryptionProgress(0, totalChars, 0, nextChars);
+    
     this.fillNextStep();
   }
 
@@ -209,12 +214,18 @@ class UIController {
     this.state.encryptionGrid = result.grid;
     this.drawEncryptionGrid();
     
+    // 進捗表示を更新
+    const originalLength = this.cipher.normalizeText(this.getElement(CONFIG.DOM_IDS.PLAIN_TEXT).value).length;
+    const usedChars = originalLength - result.remainingChars;
+    const nextChars = result.remainingChars > 0 ? this.getNextStepCharCount(this.state.rotationCount + 1) : 0;
+    this.updateEncryptionProgress(this.state.rotationCount, originalLength, usedChars, nextChars);
+    
     if (result.filled > 0 && result.remainingChars > 0) {
-      this.getElement("nextRotation").disabled = false;
+      this.getElement(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = false;
     } else {
-      this.getElement("nextRotation").disabled = true;
+      this.getElement(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
       this.showFinalCipher();
-      NotificationSystem.success(ErrorMessages.ENCRYPTION_COMPLETE, "encrypt-notifications");
+      NotificationSystem.success(ErrorMessages.ENCRYPTION_COMPLETE, CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
     }
   }
 
@@ -298,9 +309,13 @@ class UIController {
     }
     
     this.drawDecryptionGrid();
-    this.getElement("recoveredText").value = "";
-    this.updateRotationLabel("decryptionRotationLabel", 0);
-    this.getElement("nextDecryption").disabled = false;
+    this.getElement(CONFIG.DOM_IDS.RECOVERED_TEXT).value = "";
+    this.updateRotationLabel(CONFIG.DOM_IDS.DECRYPTION_ROTATION_LABEL, 0);
+    this.getElement(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = false;
+    
+    // 進捗表示の初期化
+    const nextChars = this.getNextStepCharCount(0);
+    this.updateDecryptionProgress(0, 0, nextChars);
   }
 
   // 次の復号化ステップ
@@ -319,15 +334,20 @@ class UIController {
     });
     
     this.drawDecryptionGrid(result.holes);
-    this.getElement("recoveredText").value = this.state.recoveredText;
+    this.getElement(CONFIG.DOM_IDS.RECOVERED_TEXT).value = this.state.recoveredText;
     
     this.state.decryptionStep++;
-    if (this.state.decryptionStep >= 4) {
-      this.getElement("nextDecryption").disabled = true;
-      NotificationSystem.success(ErrorMessages.DECRYPTION_COMPLETE, "decrypt-notifications");
+    
+    // 進捗表示を更新
+    const nextChars = this.state.decryptionStep < CONFIG.ROTATION_COUNT ? this.getNextStepCharCount(this.state.decryptionStep) : 0;
+    this.updateDecryptionProgress(this.state.decryptionStep - 1, this.state.recoveredText.length, nextChars);
+    
+    if (this.state.decryptionStep >= CONFIG.ROTATION_COUNT) {
+      this.getElement(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
+      NotificationSystem.success(ErrorMessages.DECRYPTION_COMPLETE, CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
     } else {
-      this.applyRotationAnimation("decryptionGrid", () => {
-        this.updateRotationLabel("decryptionRotationLabel", this.state.decryptionStep);
+      this.applyRotationAnimation(CONFIG.DOM_IDS.DECRYPTION_GRID, () => {
+        this.updateRotationLabel(CONFIG.DOM_IDS.DECRYPTION_ROTATION_LABEL, this.state.decryptionStep);
         this.drawDecryptionGrid();
       });
     }
@@ -379,22 +399,104 @@ class UIController {
     this.getElement(elementId).textContent = `回転：${rotationCount * 90}度`;
   }
 
+  // 進捗表示の更新（暗号化）
+  updateEncryptionProgress(step, totalChars, usedChars, nextChars = 0) {
+    const progressContainer = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_PROGRESS);
+    const stepInfo = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_STEP_INFO);
+    const charInfo = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_CHAR_INFO);
+    const progressBar = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_PROGRESS_BAR);
+    const nextInfo = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_NEXT_INFO);
+    
+    // 進捗コンテナを表示
+    progressContainer.style.display = 'block';
+    
+    // ステップ情報
+    stepInfo.textContent = `ステップ ${step + 1}/${CONFIG.ROTATION_COUNT}`;
+    
+    // 文字情報
+    charInfo.textContent = `${usedChars}/${totalChars} 文字埋込済み`;
+    
+    // 進捗バー
+    const percentage = totalChars > 0 ? (usedChars / totalChars) * 100 : 0;
+    progressBar.style.width = `${percentage}%`;
+    
+    // 次の情報
+    if (step < CONFIG.ROTATION_COUNT - 1 && nextChars > 0) {
+      nextInfo.textContent = `次：${nextChars}文字を埋め込みます`;
+    } else if (usedChars >= totalChars) {
+      nextInfo.textContent = '暗号化完了';
+    } else {
+      nextInfo.textContent = '最終ステップ';
+    }
+  }
+
+  // 進捗表示の更新（復号化）
+  updateDecryptionProgress(step, totalRecovered, nextChars = 0) {
+    const progressContainer = this.getElement(CONFIG.DOM_IDS.DECRYPTION_PROGRESS);
+    const stepInfo = this.getElement(CONFIG.DOM_IDS.DECRYPTION_STEP_INFO);
+    const charInfo = this.getElement(CONFIG.DOM_IDS.DECRYPTION_CHAR_INFO);
+    const progressBar = this.getElement(CONFIG.DOM_IDS.DECRYPTION_PROGRESS_BAR);
+    const nextInfo = this.getElement(CONFIG.DOM_IDS.DECRYPTION_NEXT_INFO);
+    
+    // 進捗コンテナを表示
+    progressContainer.style.display = 'block';
+    
+    // ステップ情報
+    stepInfo.textContent = `ステップ ${step + 1}/${CONFIG.ROTATION_COUNT}`;
+    
+    // 文字情報
+    charInfo.textContent = `${totalRecovered} 文字復号済み`;
+    
+    // 進捗バー
+    const percentage = (step / CONFIG.ROTATION_COUNT) * 100;
+    progressBar.style.width = `${percentage}%`;
+    
+    // 次の情報
+    if (step < CONFIG.ROTATION_COUNT - 1) {
+      nextInfo.textContent = `次：${nextChars}文字を読み取ります`;
+    } else {
+      nextInfo.textContent = '復号化完了';
+    }
+  }
+
+  // 進捗表示をリセット
+  resetProgress(mode = 'encryption') {
+    const progressId = mode === 'encryption' 
+      ? CONFIG.DOM_IDS.ENCRYPTION_PROGRESS 
+      : CONFIG.DOM_IDS.DECRYPTION_PROGRESS;
+    
+    const progressContainer = this.getElement(progressId);
+    if (progressContainer) {
+      progressContainer.style.display = 'none';
+    }
+  }
+
+  // 次のステップで埋まる文字数を計算
+  getNextStepCharCount(rotationStep) {
+    if (!this.state.currentGrille) return 0;
+    const holes = this.cipher.getGrilleHoles(this.state.currentGrille, rotationStep);
+    return holes.length;
+  }
+
   // 初期化関数
   initEncryptionMode() {
     this.state.encryptionGrid = this.createEmptyGrid();
     this.state.encryptionStep = 0;
     this.state.rotationCount = 0;
     
-    this.updateRotationLabel("rotationLabel", 0);
-    this.getElement("nextRotation").disabled = true;
-    this.getElement("cipherText").value = "";
-    this.getElement("plainText").value = "HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY";
+    this.updateRotationLabel(CONFIG.DOM_IDS.ROTATION_LABEL, 0);
+    this.getElement(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
+    this.getElement(CONFIG.DOM_IDS.CIPHER_TEXT).value = "";
+    this.getElement(CONFIG.DOM_IDS.PLAIN_TEXT).value = CONFIG.DEFAULT_PLAINTEXT;
     
-    const container = this.getElement("encryptionGrid");
+    const container = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_GRID);
     container.innerHTML = "";
     container.style.display = "none";
     
-    this.getElement("startEncryption").disabled = false;
+    // 進捗表示をリセット
+    this.resetProgress('encryption');
+    
+    this.getElement(CONFIG.DOM_IDS.START_ENCRYPTION).disabled = false;
   }
 
   initDecryptionMode() {
@@ -403,14 +505,17 @@ class UIController {
     this.state.decryptionGrid = this.createEmptyGrid();
     this.state.recoveredText = "";
     
-    this.getElement("recoveredText").value = "";
-    this.getElement("cipherInput").value = "";
-    this.getElement("nextDecryption").disabled = true;
-    this.getElement("startDecryption").disabled = true; // 初期状態では無効
-    this.updateRotationLabel("decryptionRotationLabel", 0);
+    this.getElement(CONFIG.DOM_IDS.RECOVERED_TEXT).value = "";
+    this.getElement(CONFIG.DOM_IDS.CIPHER_INPUT).value = "";
+    this.getElement(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
+    this.getElement(CONFIG.DOM_IDS.START_DECRYPTION).disabled = true; // 初期状態では無効
+    this.updateRotationLabel(CONFIG.DOM_IDS.DECRYPTION_ROTATION_LABEL, 0);
     
-    const container = this.getElement("decryptionGrid");
+    const container = this.getElement(CONFIG.DOM_IDS.DECRYPTION_GRID);
     container.innerHTML = "";
     container.style.display = "none";
+    
+    // 進捗表示をリセット
+    this.resetProgress('decryption');
   }
 }
