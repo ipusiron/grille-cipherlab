@@ -333,13 +333,19 @@ function nextDecryptionStep() {
   }
 
   drawDecryptionGrid(holes);
+  document.getElementById("recoveredText").value = recoveredText;
 
   decryptionStep++;
   if (decryptionStep >= 4) {
     document.getElementById("nextDecryption").disabled = true;
-    document.getElementById("recoveredText").value = recoveredText;
   } else {
-    rotateGrille();  // ここが重要
+    // 回転アニメーションを追加
+    document.getElementById("decryptionGrid").classList.add("rotate-animation");
+    setTimeout(() => {
+      document.getElementById("decryptionGrid").classList.remove("rotate-animation");
+      rotateGrille();
+      drawDecryptionGrid();
+    }, 400);
     document.getElementById("nextDecryption").disabled = false;
   }
 }
