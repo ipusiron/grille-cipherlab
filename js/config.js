@@ -94,7 +94,8 @@ const CONFIG = {
     DECRYPTION_NEXT_INFO: 'decryptionNextInfo',
     
     // 共通
-    TOAST: 'toast'
+    TOAST: 'toast',
+    THEME_TOGGLE: 'themeToggle'
   },
   
   // 回転角度
@@ -107,6 +108,15 @@ const CONFIG = {
     ESCAPE: 'Escape',     // リセット
     CTRL_C: 'KeyC',       // コピー（Ctrl+C）
     TAB: 'Tab'            // タブ移動
+  },
+  
+  // ダークモード設定
+  THEME: {
+    LIGHT: 'light',
+    DARK: 'dark',
+    AUTO: 'auto',
+    STORAGE_KEY: 'grille-cipher-theme',
+    CSS_CLASS: 'dark-mode'
   },
   
   // グリル生成用オフセット
@@ -136,6 +146,7 @@ Object.freeze(CONFIG.CSS_CLASSES);
 Object.freeze(CONFIG.DOM_IDS);
 Object.freeze(CONFIG.ROTATION_ANGLES);
 Object.freeze(CONFIG.KEYBOARD_SHORTCUTS);
+Object.freeze(CONFIG.THEME);
 Object.freeze(CONFIG.GRILLE_OFFSETS);
 Object.freeze(CONFIG.INPUT_STYLES);
 

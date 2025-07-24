@@ -1,11 +1,122 @@
+/* CSS変数 - ライトモード（デフォルト） */
+:root {
+  /* 背景色 */
+  --bg-primary: #f5f7fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f8f9fa;
+  
+  /* テキスト色 */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-muted: #888888;
+  
+  /* ボーダー色 */
+  --border-primary: #dee2e6;
+  --border-secondary: #e9ecef;
+  --border-focus: #0077cc;
+  
+  /* ボタン色 */
+  --btn-primary-bg: #0077cc;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #005fa3;
+  --btn-secondary-bg: #6c757d;
+  --btn-secondary-text: #ffffff;
+  
+  /* セル色 */
+  --cell-bg: #ffffff;
+  --cell-border: #ccc;
+  --cell-hole: #ffeb3b;
+  --cell-faded: #f8f9fa;
+  --cell-rotated: #e3f2fd;
+  
+  /* 通知色 */
+  --notification-error-bg: #fee;
+  --notification-error-text: #c53030;
+  --notification-error-border: #feb2b2;
+  --notification-warning-bg: #fffbeb;
+  --notification-warning-text: #d69e2e;
+  --notification-warning-border: #fbd38d;
+  --notification-success-bg: #f0fff4;
+  --notification-success-text: #38a169;
+  --notification-success-border: #9ae6b4;
+  --notification-info-bg: #ebf8ff;
+  --notification-info-text: #3182ce;
+  --notification-info-border: #90cdf4;
+  
+  /* 進捗バー色 */
+  --progress-bg: #e9ecef;
+  --progress-fill-encryption: linear-gradient(90deg, #007bff, #17a2b8);
+  --progress-fill-decryption: linear-gradient(90deg, #fd7e14, #ffc107);
+  
+  /* フィードバック色 */
+  --feedback-bg: rgba(0, 0, 0, 0.8);
+  --feedback-text: white;
+}
+
+/* ダークモード */
+.dark-mode {
+  /* 背景色 */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #404040;
+  
+  /* テキスト色 */
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888888;
+  
+  /* ボーダー色 */
+  --border-primary: #555555;
+  --border-secondary: #444444;
+  --border-focus: #66b3ff;
+  
+  /* ボタン色 */
+  --btn-primary-bg: #0099ff;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #007acc;
+  --btn-secondary-bg: #555555;
+  --btn-secondary-text: #e0e0e0;
+  
+  /* セル色 */
+  --cell-bg: #3d3d3d;
+  --cell-border: #666666;
+  --cell-hole: #ffeb3b;
+  --cell-faded: #2a2a2a;
+  --cell-rotated: #1e3a5f;
+  
+  /* 通知色 */
+  --notification-error-bg: #3d1a1a;
+  --notification-error-text: #ff6b6b;
+  --notification-error-border: #8b2635;
+  --notification-warning-bg: #3d3520;
+  --notification-warning-text: #ffa502;
+  --notification-warning-border: #b8860b;
+  --notification-success-bg: #1a3d2e;
+  --notification-success-text: #51cf66;
+  --notification-success-border: #2d8659;
+  --notification-info-bg: #1a2a3d;
+  --notification-info-text: #74c0fc;
+  --notification-info-border: #1c7ed6;
+  
+  /* 進捗バー色 */
+  --progress-bg: #444444;
+  --progress-fill-encryption: linear-gradient(90deg, #339af0, #22b8cf);
+  --progress-fill-decryption: linear-gradient(90deg, #ff8c42, #ffd43b);
+  
+  /* フィードバック色 */
+  --feedback-bg: rgba(255, 255, 255, 0.9);
+  --feedback-text: #333333;
+}
+
 /* ベース設定 */
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f5f7fa;
-  color: #333;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   max-width: 900px;
   margin: 0 auto;
   padding: 2em;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1 {
@@ -14,12 +125,14 @@ h1 {
   display: flex;
   align-items: center;
   gap: 0.5em;
+  color: var(--text-primary);
 }
 
 h2 {
   font-size: 1.3rem;
   margin-top: 0.5em;
   margin-bottom: 1em;
+  color: var(--text-primary);
 }
 
 /* タブUI */
@@ -32,25 +145,26 @@ h2 {
 .tab-button {
   padding: 0.6em 1.2em;
   border: none;
-  background-color: #ccc;
-  color: #333;
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
   font-weight: bold;
   cursor: pointer;
   border-radius: 6px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .tab-button.active {
-  background-color: #0077cc;
-  color: #fff;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
 }
 
 .tab-content {
   display: none;
-  background: #fff;
+  background: var(--bg-secondary);
   padding: 1.5em;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease;
 }
 
 .tab-content.active {
@@ -83,27 +197,27 @@ button {
   padding: 0.6em 1.2em;
   margin: 0.5em 0.5em 0.5em 0;
   font-size: 1em;
-  background-color: #0077cc;
-  color: white;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 button:hover {
-  background-color: #005fa3;
+  background-color: var(--btn-primary-hover);
 }
 
 button:disabled {
-  background-color: #ccc;
-  color: #666;
+  background-color: var(--btn-secondary-bg);
+  color: var(--text-secondary);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 button:disabled:hover {
-  background-color: #ccc;
+  background-color: var(--btn-secondary-bg);
 }
 
 /* グリルマトリクス */
@@ -123,26 +237,29 @@ button:disabled:hover {
   width: 50px;
   height: 50px;
   line-height: 50px;
-  background-color: #eaeff4;
-  border: 2px solid transparent;
+  background-color: var(--cell-bg);
+  border: 2px solid var(--cell-border);
+  color: var(--text-primary);
   text-align: center;
   font-weight: bold;
   font-size: 1.1em;
   border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
 .cell-hole {
-  background-color: #d3f3ff;
-  border-color: #00bcd4;
+  background-color: var(--cell-hole);
+  border-color: var(--border-focus);
 }
 
 .cell-faded {
-  color: #aaa;
+  background-color: var(--cell-faded);
+  color: var(--text-muted);
   opacity: 0.4;
 }
 
 .cell-rotated {
-  background-color: #fff9c4;
+  background-color: var(--cell-rotated);
 }
 
 /* 通知や補助ラベル */
@@ -253,27 +370,27 @@ a:hover {
 }
 
 .notification-error {
-  background-color: #fee;
-  color: #c53030;
-  border: 1px solid #feb2b2;
+  background-color: var(--notification-error-bg);
+  color: var(--notification-error-text);
+  border: 1px solid var(--notification-error-border);
 }
 
 .notification-warning {
-  background-color: #fffbeb;
-  color: #d69e2e;
-  border: 1px solid #fbd38d;
+  background-color: var(--notification-warning-bg);
+  color: var(--notification-warning-text);
+  border: 1px solid var(--notification-warning-border);
 }
 
 .notification-success {
-  background-color: #f0fff4;
-  color: #38a169;
-  border: 1px solid #9ae6b4;
+  background-color: var(--notification-success-bg);
+  color: var(--notification-success-text);
+  border: 1px solid var(--notification-success-border);
 }
 
 .notification-info {
-  background-color: #ebf8ff;
-  color: #3182ce;
-  border: 1px solid #90cdf4;
+  background-color: var(--notification-info-bg);
+  color: var(--notification-info-text);
+  border: 1px solid var(--notification-info-border);
 }
 
 .notification::before {
@@ -302,12 +419,13 @@ a:hover {
 
 /* 詳細進捗表示 */
 .progress-container {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
   border-radius: 8px;
   padding: 1em;
   margin: 1em 0;
   font-size: 0.9em;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .progress-info {
@@ -319,19 +437,20 @@ a:hover {
 }
 
 .progress-info span {
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .progress-bar {
-  background: #e9ecef;
+  background: var(--progress-bg);
   border-radius: 10px;
   height: 8px;
   overflow: hidden;
   margin-bottom: 0.6em;
+  transition: background-color 0.3s ease;
 }
 
 .progress-fill {
-  background: linear-gradient(90deg, #28a745, #20c997);
+  background: var(--progress-fill-encryption);
   height: 100%;
   border-radius: 10px;
   transition: width 0.4s ease;
@@ -339,18 +458,18 @@ a:hover {
 }
 
 .next-info {
-  color: #6c757d;
+  color: var(--text-muted);
   font-size: 0.85em;
   font-style: italic;
 }
 
 /* 暗号化と復号で色を少し変える */
 #encryptionProgress .progress-fill {
-  background: linear-gradient(90deg, #007bff, #17a2b8);
+  background: var(--progress-fill-encryption);
 }
 
 #decryptionProgress .progress-fill {
-  background: linear-gradient(90deg, #fd7e14, #ffc107);
+  background: var(--progress-fill-decryption);
 }
 
 /* キーボードショートカットフィードバック */
@@ -410,5 +529,39 @@ a:hover {
 
 #showShortcutHelp:focus {
   border-color: #0077cc;
+  box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.25);
+}
+
+/* テーマトグルボタン */
+#themeToggle {
+  background: var(--bg-secondary) !important;
+  border: 2px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+  padding: 0.4em 0.8em;
+  border-radius: 6px;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  outline: none;
+  text-decoration: none;
+  margin-left: 0.5em;
+}
+
+#themeToggle:hover {
+  background: var(--btn-primary-bg) !important;
+  border-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#themeToggle:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#themeToggle:focus {
+  border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.25);
 }

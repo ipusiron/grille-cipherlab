@@ -2,6 +2,7 @@
 let cipher;
 let uiController;
 let keyboardManager;
+let themeManager;
 
 // 🔹 グリル作成モード：3x3初期化・回転・6x6生成
 function initBaseMatrix() {
@@ -96,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
   cipher = new GrilleCipher();
   uiController = new UIController(cipher);
   keyboardManager = new KeyboardShortcutManager(uiController);
+  themeManager = new ThemeManager();
 
   // 平文入力時のチェック
   document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT).addEventListener("input", () => {
@@ -135,6 +137,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // ショートカットヘルプ
   document.getElementById("showShortcutHelp").addEventListener("click", () => {
     keyboardManager.showHelp();
+  });
+  
+  // テーマ切り替え
+  document.getElementById(CONFIG.DOM_IDS.THEME_TOGGLE).addEventListener("click", () => {
+    themeManager.toggleTheme();
   });
 
   // グリル生成
