@@ -10,6 +10,33 @@ let decryptionStep = 0;
 let decryptionGrid = []; // 6x6配列
 let recoveredText = "";
 
+// ヘルパー関数
+function create6x6Array(fillValue) {
+  return Array.from({ length: 6 }, () => Array(6).fill(fillValue));
+}
+
+function setGridStyles(container) {
+  container.style.display = "grid";
+  container.style.gridTemplateColumns = "repeat(6, 40px)";
+  container.style.gridTemplateRows = "repeat(6, 40px)";
+  container.style.gap = "4px";
+  container.style.width = "fit-content";
+  container.style.margin = "1em auto";
+}
+
+function applyRotationAnimation(elementId, callback) {
+  const element = document.getElementById(elementId);
+  element.classList.add("rotate-animation");
+  setTimeout(() => {
+    element.classList.remove("rotate-animation");
+    if (callback) callback();
+  }, 400);
+}
+
+function normalizeText(text) {
+  return text.toUpperCase().replace(/[^A-Z]/g, '');
+}
+
 // 🔹 グリル作成モード：3x3初期化・回転・6x6生成
 function initBaseMatrix() {
   const container = document.getElementById("baseMatrix");
@@ -56,7 +83,7 @@ function rotateMatrix(matrix, times) {
 }
 
 function buildRotatingGrille(base3x3) {
-  const grille6x6 = Array.from({ length: 6 }, () => Array(6).fill(false));
+  const grille6x6 = create6x6Array(false);
   const offsets = [
     [0, 0],  // 0° → 左上
     [0, 3],  // 90° → 右上
@@ -136,7 +163,7 @@ function renderGrillePreview(grille) {
 }
 
 function initEncryptionGrid() {
-  encryptionGrid = Array.from({ length: 6 }, () => Array(6).fill(""));
+  encryptionGrid = create6x6Array("");
   encryptionStep = 0;
   rotationCount = 0;
   document.getElementById("rotationLabel").textContent = "回転：0度";
@@ -154,7 +181,7 @@ function initEncryptionGrid() {
 function initDecryptionGrid() {
   cipherChars = [];
   decryptionStep = 0;
-  decryptionGrid = Array.from({ length: 6 }, () => Array(6).fill(""));
+  decryptionGrid = create6x6Array("");
   recoveredText = "";
   document.getElementById("recoveredText").value = "";
   document.getElementById("cipherInput").value = "";
@@ -209,9 +236,9 @@ function startEncryption() {
   document.getElementById("nextRotation").disabled = true;
   document.getElementById("cipherText").value = "";
   
-  const input = inputField.value.toUpperCase();
-  plainChars = input.replace(/[^A-Z]/g, "").split("");
-  encryptionGrid = Array.from({ length: 6 }, () => Array(6).fill(""));
+  const input = normalizeText(inputField.value);
+  plainChars = input.split("");
+  encryptionGrid = create6x6Array("");
   rotationCount = 0;
   document.getElementById("rotationLabel").textContent = "回転：0度";
   fillNextStep();
@@ -220,11 +247,7 @@ function startEncryption() {
 function nextRotationStep() {
   rotationCount++;
   document.getElementById("rotationLabel").textContent = `回転：${rotationCount * 90}度`;
-  document.getElementById("encryptionGrid").classList.add("rotate-animation");
-  setTimeout(() => {
-    document.getElementById("encryptionGrid").classList.remove("rotate-animation");
-    fillNextStep();
-  }, 400);
+  applyRotationAnimation("encryptionGrid", fillNextStep);
 }
 
 function fillNextStep() {
@@ -247,19 +270,9 @@ function fillNextStep() {
   }
 }
 
-function nextRotationStep() {
-  rotationCount++;
-  document.getElementById("rotationLabel").textContent = `回転：${rotationCount * 90}度`;
-  document.getElementById("encryptionGrid").classList.add("rotate-animation");
-  setTimeout(() => {
-    document.getElementById("encryptionGrid").classList.remove("rotate-animation");
-    fillNextStep();
-  }, 400);
-}
-
 function getCurrentRotatedGrilleMap() {
   const g = window.currentGrille;
-  const rotatedMap = Array.from({ length: 6 }, () => Array(6).fill(false));
+  const rotatedMap = create6x6Array(false);
   for (let r = 0; r < 6; r++) {
     for (let c = 0; c < 6; c++) {
       if (g[r][c]) {
@@ -278,12 +291,7 @@ function getCurrentRotatedGrilleMap() {
 function drawEncryptionGrid() {
   const container = document.getElementById("encryptionGrid");
   container.innerHTML = "";
-  container.style.display = "grid";
-  container.style.gridTemplateColumns = "repeat(6, 40px)";
-  container.style.gridTemplateRows = "repeat(6, 40px)";
-  container.style.gap = "4px";
-  container.style.width = "fit-content";
-  container.style.margin = "1em auto";
+  setGridStyles(container);
 
   const rotatedMap = getCurrentRotatedGrilleMap();
   for (let r = 0; r < 6; r++) {
@@ -319,9 +327,9 @@ function copyCipherText() {
 }
 
 function startDecryption() {
-  const input = document.getElementById("cipherInput").value.toUpperCase();
-  cipherChars = input.replace(/[^A-Z]/g, "").split("");
-  decryptionGrid = Array.from({ length: 6 }, () => Array(6).fill(""));
+  const input = normalizeText(document.getElementById("cipherInput").value);
+  cipherChars = input.split("");
+  decryptionGrid = create6x6Array("");
   decryptionStep = 0;
   recoveredText = "";
 
@@ -366,13 +374,11 @@ function nextDecryptionStep() {
     document.getElementById("nextDecryption").disabled = true;
   } else {
     // 回転アニメーションを追加
-    document.getElementById("decryptionGrid").classList.add("rotate-animation");
-    setTimeout(() => {
-      document.getElementById("decryptionGrid").classList.remove("rotate-animation");
+    applyRotationAnimation("decryptionGrid", () => {
       rotateGrille();
       document.getElementById("decryptionRotationLabel").textContent = `回転：${decryptionStep * 90}度`;
       drawDecryptionGrid();
-    }, 400);
+    });
     document.getElementById("nextDecryption").disabled = false;
   }
 }
@@ -380,13 +386,8 @@ function nextDecryptionStep() {
 
 function drawDecryptionGrid(highlight = []) {
   const container = document.getElementById("decryptionGrid");
-  container.style.display = "grid";
-  container.style.gridTemplateColumns = "repeat(6, 40px)";
-  container.style.gridTemplateRows = "repeat(6, 40px)";
-  container.style.gap = "4px";
-  container.style.width = "fit-content";
-  container.style.margin = "1em auto";
   container.innerHTML = "";
+  setGridStyles(container);
   for (let r = 0; r < 6; r++) {
     for (let c = 0; c < 6; c++) {
       const cell = document.createElement("div");
@@ -452,7 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function rotateGrille() {
-  const newGrille = Array.from({ length: 6 }, () => Array(6).fill(false));
+  const newGrille = create6x6Array(false);
   for (let r = 0; r < 6; r++) {
     for (let c = 0; c < 6; c++) {
       if (window.currentGrille[r][c]) {
