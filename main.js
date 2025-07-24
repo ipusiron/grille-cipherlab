@@ -1,41 +1,6 @@
-// 暗号化関連グローバル変数
-let plainChars = [];
-let encryptionStep = 0;
-let rotationCount = 0;
-let encryptionGrid = []; // 6x6配列
-
-// 復号関連
-let cipherChars = [];
-let decryptionStep = 0;
-let decryptionGrid = []; // 6x6配列
-let recoveredText = "";
-
-// ヘルパー関数
-function create6x6Array(fillValue) {
-  return Array.from({ length: 6 }, () => Array(6).fill(fillValue));
-}
-
-function setGridStyles(container) {
-  container.style.display = "grid";
-  container.style.gridTemplateColumns = "repeat(6, 40px)";
-  container.style.gridTemplateRows = "repeat(6, 40px)";
-  container.style.gap = "4px";
-  container.style.width = "fit-content";
-  container.style.margin = "1em auto";
-}
-
-function applyRotationAnimation(elementId, callback) {
-  const element = document.getElementById(elementId);
-  element.classList.add("rotate-animation");
-  setTimeout(() => {
-    element.classList.remove("rotate-animation");
-    if (callback) callback();
-  }, 400);
-}
-
-function normalizeText(text) {
-  return text.toUpperCase().replace(/[^A-Z]/g, '');
-}
+// アプリケーション初期化
+let cipher;
+let uiController;
 
 // 🔹 グリル作成モード：3x3初期化・回転・6x6生成
 function initBaseMatrix() {
