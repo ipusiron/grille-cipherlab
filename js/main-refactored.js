@@ -1,6 +1,7 @@
 // アプリケーション初期化
 let cipher;
 let uiController;
+let keyboardManager;
 
 // 🔹 グリル作成モード：3x3初期化・回転・6x6生成
 function initBaseMatrix() {
@@ -94,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // インスタンス作成
   cipher = new GrilleCipher();
   uiController = new UIController(cipher);
+  keyboardManager = new KeyboardShortcutManager(uiController);
 
   // 平文入力時のチェック
   document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT).addEventListener("input", () => {
@@ -129,6 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // その他のイベント
   document.getElementById(CONFIG.DOM_IDS.COPY_CIPHER).addEventListener("click", copyCipherText);
+  
+  // ショートカットヘルプ
+  document.getElementById("showShortcutHelp").addEventListener("click", () => {
+    keyboardManager.showHelp();
+  });
 
   // グリル生成
   initBaseMatrix();
@@ -149,6 +156,9 @@ document.addEventListener("DOMContentLoaded", () => {
       tab.classList.add("active");
       document.getElementById(target).classList.add("active");
       
+      // キーボードショートカットのモードを更新
+      keyboardManager.setCurrentMode(target);
+      
       if (target === "encrypt") {
         document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
         checkPlainTextAndUpdateButtons();
@@ -161,4 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 初期化
   resetAllModes();
+  
+  // キーボードショートカット初期モード設定
+  keyboardManager.setCurrentMode('grille');
 });

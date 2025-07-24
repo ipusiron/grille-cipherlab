@@ -352,3 +352,63 @@ a:hover {
 #decryptionProgress .progress-fill {
   background: linear-gradient(90deg, #fd7e14, #ffc107);
 }
+
+/* キーボードショートカットフィードバック */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  20%, 80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+.shortcut-feedback {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-family: 'Inter', monospace;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* ショートカットヘルプボタン */
+#showShortcutHelp {
+  background: #ffffff !important;
+  border: 2px solid #6c757d !important;
+  color: #212529 !important;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  outline: none;
+  text-decoration: none;
+}
+
+#showShortcutHelp:hover {
+  background: #0077cc !important;
+  border-color: #0077cc !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 8px rgba(0, 119, 204, 0.3);
+  transform: translateY(-2px);
+}
+
+#showShortcutHelp:active {
+  background: #005fa3 !important;
+  border-color: #005fa3 !important;
+  color: #ffffff !important;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 95, 163, 0.4);
+}
+
+#showShortcutHelp:focus {
+  border-color: #0077cc;
+  box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.25);
+}

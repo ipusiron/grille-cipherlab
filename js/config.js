@@ -100,6 +100,15 @@ const CONFIG = {
   // 回転角度
   ROTATION_ANGLES: [0, 90, 180, 270],
   
+  // キーボードショートカット
+  KEYBOARD_SHORTCUTS: {
+    SPACE: ' ',           // 進むボタン
+    ENTER: 'Enter',       // 開始ボタン
+    ESCAPE: 'Escape',     // リセット
+    CTRL_C: 'KeyC',       // コピー（Ctrl+C）
+    TAB: 'Tab'            // タブ移動
+  },
+  
   // グリル生成用オフセット
   GRILLE_OFFSETS: [
     [0, 0],  // 0° → 左上
@@ -126,6 +135,7 @@ Object.freeze(CONFIG.DEFAULT_BASE_MATRIX);
 Object.freeze(CONFIG.CSS_CLASSES);
 Object.freeze(CONFIG.DOM_IDS);
 Object.freeze(CONFIG.ROTATION_ANGLES);
+Object.freeze(CONFIG.KEYBOARD_SHORTCUTS);
 Object.freeze(CONFIG.GRILLE_OFFSETS);
 Object.freeze(CONFIG.INPUT_STYLES);
 
