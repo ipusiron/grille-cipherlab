@@ -143,7 +143,10 @@ function initEncryptionGrid() {
   document.getElementById("nextRotation").disabled = true;
   document.getElementById("cipherText").value = "";
   document.getElementById("plainText").value = "HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY";
-  drawEncryptionGrid();
+  // 初期状態ではグリッドを表示しない
+  const container = document.getElementById("encryptionGrid");
+  container.innerHTML = "";
+  container.style.display = "none";
   // 初期テキストがあるので暗号化開始ボタンは有効
   document.getElementById("startEncryption").disabled = false;
 }
@@ -157,7 +160,10 @@ function initDecryptionGrid() {
   document.getElementById("cipherInput").value = "";
   document.getElementById("nextDecryption").disabled = true;
   document.getElementById("decryptionRotationLabel").textContent = "回転：0度";
-  drawDecryptionGrid();
+  // 初期状態ではグリッドを表示しない
+  const container = document.getElementById("decryptionGrid");
+  container.innerHTML = "";
+  container.style.display = "none";
 }
 
 function resetAllModes() {
