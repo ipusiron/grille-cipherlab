@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grille CipherLab</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <h1>🌀 Grille CipherLab</h1>
+    <p>回転グリル暗号の仕組みを体験できるツール</p>
+
+  <!-- モード切り替えタブ -->
+  <div class="tabs">
+    <button class="tab-button active" data-target="grille">① グリル作成</button>
+    <button class="tab-button" data-target="encrypt">② 暗号化</button>
+    <button class="tab-button" data-target="decrypt">③ 復号</button>
+  </div>
+
+  <!-- モード① グリル作成 -->
+  <section id="grille" class="tab-content active">
+    <h2>① グリル作成モード</h2>
+    <p>3×3マトリクスを基に、6×6の回転グリルを生成します。</p>
+    <div id="baseMatrix"></div>
+    <button id="generateGrille">→ グリル生成</button>
+    <div id="grillePreview"></div>
+  </section>
+
+  <!-- モード② 暗号化 -->
+  <section id="encrypt" class="tab-content">
+    <h2>② 暗号化モード</h2>
+    <p>グリルを使って平文を暗号化します。</p>
+    <label for="plainText">平文入力：</label>
+    <textarea id="plainText" rows="3">HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY</textarea>
+    <div id="limitNote" style="color:#666; font-size:0.9em; margin-top:0.3em;">※ 空白は無視されます</div>
+    <button id="startEncryption">暗号化開始</button>
+    <button id="nextRotation" disabled>▶進む</button>
+    <div id="rotationLabel">回転：0度</div>
+    <div id="encryptionGrid"></div>
+    <div style="margin-top: 1em;">
+      <label for="cipherText">暗号文：</label>
+      <textarea id="cipherText" rows="2" readonly></textarea>
+      <button id="copyCipher">コピー</button>
+    </div>
+    <div id="toast" class="toast">コピーしました</div>
+  </section>
+
+  <!-- モード③ 復号 -->
+  <section id="decrypt" class="tab-content">
+    <h2>③ 復号モード</h2>
+    <p>暗号文を入力し、グリルを重ねて平文を復元します。</p>
+    <label for="cipherInput">暗号文入力：</label>
+    <textarea id="cipherInput" rows="2"></textarea>
+    <button id="startDecryption">復号開始</button>
+    <button id="nextDecryption" disabled>▶進む</button>
+    <div id="decryptionGrid"></div>
+    <div style="margin-top: 1em;">
+      <label for="recoveredText">復号結果：</label>
+      <textarea id="recoveredText" rows="2" readonly></textarea>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer">
+      🔗 GitHubリポジトリはこちら（
+      <a href="https://github.com/ipusiron/grille-cipherlab" target="_blank">
+        ipusiron/grille-cipherlab
+      </a>）
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
