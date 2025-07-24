@@ -299,14 +299,29 @@ function startDecryption() {
   decryptionGrid = Array.from({ length: 6 }, () => Array(6).fill(""));
   decryptionStep = 0;
   recoveredText = "";
+
   let index = 0;
   for (let r = 0; r < 6; r++) {
     for (let c = 0; c < 6; c++) {
       decryptionGrid[r][c] = cipherChars[index++] || "";
     }
   }
+
   drawDecryptionGrid();
+  document.getElementById("recoveredText").value = "";
   document.getElementById("nextDecryption").disabled = false;
+}
+
+function getCurrentRotatedGrille() {
+  const holes = [];
+  for (let r = 0; r < 6; r++) {
+    for (let c = 0; c < 6; c++) {
+      if (window.currentGrille[r][c]) {
+        holes.push([r, c]);
+      }
+    }
+  }
+  return holes;
 }
 
 function nextDecryptionStep() {
@@ -316,16 +331,26 @@ function nextDecryptionStep() {
     if (ch) recoveredText += ch;
     animateCell(r, c, "decryptionGrid");
   }
+
   drawDecryptionGrid(holes);
+
   decryptionStep++;
   if (decryptionStep >= 4) {
     document.getElementById("nextDecryption").disabled = true;
     document.getElementById("recoveredText").value = recoveredText;
+  } else {
+    rotateGrille();  // ここが重要
+    document.getElementById("nextDecryption").disabled = false;
   }
 }
 
+
 function drawDecryptionGrid(highlight = []) {
   const container = document.getElementById("decryptionGrid");
+  container.style.display = "grid";
+  container.style.gridTemplateColumns = "repeat(6, 40px)";
+  container.style.gridTemplateRows = "repeat(6, 40px)";
+  container.style.gap = "4px";
   container.innerHTML = "";
   for (let r = 0; r < 6; r++) {
     for (let c = 0; c < 6; c++) {
@@ -384,3 +409,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // 初回リセット（任意）
   resetAllModes();
 });
+
+function rotateGrille() {
+  const newGrille = Array.from({ length: 6 }, () => Array(6).fill(false));
+  for (let r = 0; r < 6; r++) {
+    for (let c = 0; c < 6; c++) {
+      if (window.currentGrille[r][c]) {
+        let [rr, cc] = [c, 5 - r];  // 90度回転
+        newGrille[rr][cc] = true;
+      }
+    }
+  }
+  window.currentGrille = newGrille;
+}
