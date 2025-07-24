@@ -156,6 +156,7 @@ button:hover {
 }
 
 #rotationLabel,
+#decryptionRotationLabel,
 #stepInfo {
   font-weight: bold;
   color: #444;

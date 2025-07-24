@@ -144,6 +144,8 @@ function initEncryptionGrid() {
   document.getElementById("cipherText").value = "";
   document.getElementById("plainText").value = "HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY";
   drawEncryptionGrid();
+  // 初期テキストがあるので暗号化開始ボタンは有効
+  document.getElementById("startEncryption").disabled = false;
 }
 
 function initDecryptionGrid() {
@@ -154,6 +156,7 @@ function initDecryptionGrid() {
   document.getElementById("recoveredText").value = "";
   document.getElementById("cipherInput").value = "";
   document.getElementById("nextDecryption").disabled = true;
+  document.getElementById("decryptionRotationLabel").textContent = "回転：0度";
   drawDecryptionGrid();
 }
 
@@ -169,23 +172,37 @@ function resetAllModes() {
 }
 
 // 文字埋め処理（暗号化）
+function checkPlainTextAndUpdateButtons() {
+  const inputField = document.getElementById("plainText");
+  const startButton = document.getElementById("startEncryption");
+  const nextButton = document.getElementById("nextRotation");
+  
+  if (inputField.value.trim() === "") {
+    startButton.disabled = true;
+    nextButton.disabled = true;
+  } else {
+    startButton.disabled = false;
+    // nextButton は startEncryption 実行後に有効化される
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("plainText").addEventListener("input", () => {
+    checkPlainTextAndUpdateButtons();
     document.getElementById("nextRotation").disabled = true;
   });
+  // 初期状態でもチェック
+  checkPlainTextAndUpdateButtons();
 });
 function startEncryption() {
-  if (document.getElementById("nextRotation")) {
-    document.getElementById("nextRotation").disabled = true;
-  }
-  document.getElementById("cipherText").value = "";
-    const inputField = document.getElementById("plainText");
+  const inputField = document.getElementById("plainText");
   if (inputField.value.trim() === "") {
-    document.getElementById("startEncryption").disabled = true;
     return;
-  } else {
-    document.getElementById("startEncryption").disabled = false;
   }
+  
+  document.getElementById("nextRotation").disabled = true;
+  document.getElementById("cipherText").value = "";
+  
   const input = inputField.value.toUpperCase();
   plainChars = input.replace(/[^A-Z]/g, "").split("");
   encryptionGrid = Array.from({ length: 6 }, () => Array(6).fill(""));
@@ -309,6 +326,7 @@ function startDecryption() {
 
   drawDecryptionGrid();
   document.getElementById("recoveredText").value = "";
+  document.getElementById("decryptionRotationLabel").textContent = "回転：0度";
   document.getElementById("nextDecryption").disabled = false;
 }
 
@@ -344,6 +362,7 @@ function nextDecryptionStep() {
     setTimeout(() => {
       document.getElementById("decryptionGrid").classList.remove("rotate-animation");
       rotateGrille();
+      document.getElementById("decryptionRotationLabel").textContent = `回転：${decryptionStep * 90}度`;
       drawDecryptionGrid();
     }, 400);
     document.getElementById("nextDecryption").disabled = false;
@@ -409,6 +428,12 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll(".tab-content").forEach(sec => sec.classList.remove("active"));
       tab.classList.add("active");
       document.getElementById(target).classList.add("active");
+      
+      // 暗号化タブに切り替えた時、進むボタンが確実に無効化されているか確認
+      if (target === "encrypt") {
+        document.getElementById("nextRotation").disabled = true;
+        checkPlainTextAndUpdateButtons();
+      }
     });
   });
 
