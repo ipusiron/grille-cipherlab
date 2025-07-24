@@ -202,6 +202,7 @@ a:hover {
 
 .rotate-animation {
   animation: rotateBoard 0.4s linear;
+  transform-origin: center center;
 }
 @keyframes rotateBoard {
   from { transform: rotate(0deg); }
@@ -216,8 +217,10 @@ a:hover {
   100% { background-color: inherit; }
 }
 
-#encryptionGrid {
+#encryptionGrid,
+#decryptionGrid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 4px;
+  transform-origin: center center;
 }

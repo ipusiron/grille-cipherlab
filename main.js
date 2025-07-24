@@ -282,6 +282,8 @@ function drawEncryptionGrid() {
   container.style.gridTemplateColumns = "repeat(6, 40px)";
   container.style.gridTemplateRows = "repeat(6, 40px)";
   container.style.gap = "4px";
+  container.style.width = "fit-content";
+  container.style.margin = "1em auto";
 
   const rotatedMap = getCurrentRotatedGrilleMap();
   for (let r = 0; r < 6; r++) {
@@ -382,6 +384,8 @@ function drawDecryptionGrid(highlight = []) {
   container.style.gridTemplateColumns = "repeat(6, 40px)";
   container.style.gridTemplateRows = "repeat(6, 40px)";
   container.style.gap = "4px";
+  container.style.width = "fit-content";
+  container.style.margin = "1em auto";
   container.innerHTML = "";
   for (let r = 0; r < 6; r++) {
     for (let c = 0; c < 6; c++) {
