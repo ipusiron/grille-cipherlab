@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Rotating Grille Cipher visualization tool** - a simple, educational web application that demonstrates the historical rotating grille cipher technique. It's part of the "100 Security Tools Created with Generative AI" project (Day 024).
+This is a **Rotating Grille Cipher visualization tool** - an educational web application that demonstrates the historical rotating grille cipher technique. It's part of the "100 Security Tools Created with Generative AI" project (Day 024).
 
 ## Tech Stack
 
@@ -13,44 +13,60 @@ This is a **Rotating Grille Cipher visualization tool** - a simple, educational 
 - **No package manager** - No npm, yarn, or other dependency management
 - **No external JavaScript dependencies** - Only uses Google Fonts for styling
 
-## Architecture
-
-The application uses a simple, monolithic structure:
-
-- `index.html` - Contains all UI elements with a tab-based interface
-- `main.js` - All JavaScript logic in a single file using global scope
-- `style.css` - All styling in one file
-- No module system or component architecture
-
-Key architectural patterns:
-- **Global state management** through variables like `plainChars`, `encryptionStep`, etc.
-- **Event-driven UI** with event listeners on tabs and buttons
-- **Matrix operations** for rotating the grille pattern
-- **Step-by-step visualization** for encryption/decryption process
-
 ## Development Commands
 
 Since this is a static site with no build process:
 
-- **Run locally**: Open `index.html` directly in a browser or use a simple HTTP server (e.g., `python -m http.server`)
+- **Run locally**: `python -m http.server 8000` or `npx serve .`
 - **Deploy**: Upload the files to any static hosting service
 - **No build/test/lint commands** - The project has no build pipeline or test suite
 
+## Architecture
+
+The application uses a modular JavaScript architecture with global scope classes:
+
+```
+js/
+├── config.js              # Central configuration (CONFIG object, frozen with Object.freeze)
+├── grille-cipher-logic.js # Pure cipher logic (GrilleCipher class)
+├── notification-system.js # User notifications (NotificationSystem, ValidationHelper, ErrorMessages)
+├── ui-controller.js       # UI state & rendering (UIController class)
+├── keyboard-shortcuts.js  # Keyboard handling (KeyboardShortcutManager class)
+├── theme-manager.js       # Dark mode support (ThemeManager class)
+└── main-refactored.js     # App initialization and event binding
+```
+
+**Load Order**: Scripts must load in this order (defined in index.html) since later scripts depend on earlier ones.
+
+### Key Classes
+
+- **`GrilleCipher`**: Pure cipher logic - grille generation, rotation, encrypt/decrypt operations
+- **`UIController`**: Manages all UI state in `this.state` object, renders grids, handles step-by-step visualization
+- **`NotificationSystem`**: Static methods for displaying error/warning/success/info messages
+- **`ValidationHelper`**: Input validation for matrix values and text input
+
+### Configuration
+
+All configurable values are centralized in `CONFIG` object (`config.js`):
+- `GRILLE_SIZE` (6), `BASE_SIZE` (3), `ROTATION_COUNT` (4)
+- `DOM_IDS` - All element IDs as constants
+- `CSS_CLASSES` - All CSS class names
+- `KEYBOARD_SHORTCUTS` - Key bindings
+- `DEFAULT_BASE_MATRIX` - Initial 3×3 matrix values
+
 ## Key Implementation Details
 
-1. **Grille Pattern Generation**: The `generateGrillePattern()` function creates a 6×6 grille from a 3×3 base matrix with specific bit patterns
+1. **Grille Generation**: `GrilleCipher.generateGrille()` creates 6×6 grille from 3×3 base matrix. Each value (1-4) indicates which rotation step that cell becomes a hole.
 
-2. **Rotation Logic**: Uses matrix transposition and reversal to achieve 90° rotations in `rotateMatrix90()`
+2. **Rotation Logic**: `rotateMatrix()` uses transposition + reversal for 90° rotations
 
-3. **Cipher Operations**: 
-   - Encryption places characters through grille holes across 4 rotations
-   - Decryption reads characters through the grille pattern
+3. **Step-by-step Visualization**: `encryptStep()` and `decryptStep()` process one rotation at a time, returning positions for UI animation
 
-4. **UI State Management**: Tab switching is handled by `showTab()` which manages display states
+4. **State Management**: `UIController.state` tracks encryption/decryption progress, grids, and current grille
 
 ## Important Notes
 
 - This is an **educational tool** for demonstrating cryptographic concepts, not for actual security use
-- The default example text is "HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY"
+- Default example text: "HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY"
 - Documentation is primarily in Japanese (README.md)
 - Licensed under MIT License (Copyright 2025 ipusiron)

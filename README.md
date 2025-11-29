@@ -1,3 +1,37 @@
+<!--
+---
+id: day024
+slug: grille-cipherlab
+
+title: "Grille CipherLab"
+
+subtitle_ja: "回転グリル暗号の可視化ツール"
+subtitle_en: "Rotating Grille Cipher Visualization Tool"
+
+description_ja: "回転グリル暗号（Rotating Grille Cipher）の暗号化・復号プロセスをステップバイステップで視覚化する教育ツール。3×3マトリクスから6×6グリルを生成し、4回転で文字を配置する仕組みを直感的に理解できます。"
+description_en: "An educational tool that visualizes the encryption and decryption process of the Rotating Grille Cipher step by step. Generate a 6×6 grille from a 3×3 matrix and intuitively understand how characters are placed through 4 rotations."
+
+category_ja:
+  - 古典暗号
+  - 転置式暗号
+category_en:
+  - Classical Cryptography
+  - Transposition Cipher
+
+difficulty: 3
+
+tags:
+  - rotating-grille-cipher
+  - visualization
+  - cryptography-education
+
+repo_url: "https://github.com/ipusiron/grille-cipherlab"
+demo_url: "https://ipusiron.github.io/grille-cipherlab/"
+
+hub: true
+---
+-->
+
 # 🌀 Grille CipherLab - 回転グリル暗号の可視化ツール
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/grille-cipherlab?style=social)
