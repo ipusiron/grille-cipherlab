@@ -74,10 +74,12 @@ function bindGrilleCreator() {
     const sample = GrilleSamples.find(item => item.id === id);
     if (!sample) return;
     uiController.clearRuns(true);
+    uiController.initSolveMode();
     uiController.setKey(sample.key);
     uiController.setDirection(sample.direction);
     document.getElementById('plainText').value = sample.plain;
     document.getElementById('cipherInput').value = sample.cipher;
+    document.getElementById('solveCipher').value = sample.cipher;
     const name = t(sample.nameKey);
     const note = sample.noteKey ? ` ${t(sample.noteKey)}` : '';
     uiController.showGrilleMessage(t('sample.loaded', { name }) + note, 'success');
@@ -134,6 +136,7 @@ async function copyRecoveredText() {
 function resetAllModes() {
   uiController.initEncryptionMode();
   uiController.initDecryptionMode();
+  uiController.initSolveMode();
   
   // すべての通知をクリア
   NotificationSystem.clearAll();
@@ -212,6 +215,22 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('decHideCard').addEventListener('change', () => uiController.renderDecryption());
   document.getElementById('reverseOutput').addEventListener('click', () => uiController.toggleDecryptionReverse());
   document.getElementById('copyRecovered').addEventListener('click', copyRecoveredText);
+
+  document.getElementById('solveCipher').addEventListener('input', () => {
+    uiController.clearSolveSearch();
+    uiController.state.solve.blocks = [];
+    uiController.renderSolve();
+  });
+  document.getElementById('solveLoad').addEventListener('click', () => uiController.loadSolve());
+  document.getElementById('solveBlock').addEventListener('change', event => {
+    uiController.state.solve.blockIndex = Number(event.target.value);
+    uiController.renderSolve();
+  });
+  document.getElementById('solveRotateKey').addEventListener('click', () => uiController.rotateSolveKey());
+  document.getElementById('solveReverse').addEventListener('change', () => uiController.renderSolve());
+  document.getElementById('solveLang').addEventListener('change', () => uiController.renderSolve());
+  document.getElementById('solveSearch').addEventListener('click', () => uiController.startSolveSearch());
+  document.getElementById('solveCancel').addEventListener('click', () => uiController.cancelSolveSearch());
 
   // その他のイベント
   document.getElementById(CONFIG.DOM_IDS.COPY_CIPHER).addEventListener("click", copyCipherText);

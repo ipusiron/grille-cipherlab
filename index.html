@@ -26,6 +26,7 @@
     <button type="button" class="tab-button active" id="tab-grille" role="tab" data-target="grille" aria-controls="grille" aria-selected="true" tabindex="0">① グリル作成</button>
     <button type="button" class="tab-button" id="tab-encrypt" role="tab" data-target="encrypt" aria-controls="encrypt" aria-selected="false" tabindex="-1">② 暗号化</button>
     <button type="button" class="tab-button" id="tab-decrypt" role="tab" data-target="decrypt" aria-controls="decrypt" aria-selected="false" tabindex="-1">③ 復号</button>
+    <button type="button" class="tab-button" id="tab-solve" role="tab" data-target="solve" aria-controls="solve" aria-selected="false" tabindex="-1">④ 解読</button>
   </div>
 
   <!-- モード① グリル作成 -->
@@ -128,6 +129,48 @@
     </div>
   </section>
 
+  <!-- モード④ 解読 -->
+  <section id="solve" class="tab-content" role="tabpanel" aria-labelledby="tab-solve" hidden>
+    <h2>④ 解読モード</h2>
+    <p>暗号文を作業台で読み、英語・フランス語のトライグラム統計を使って鍵を総当たりできます。</p>
+    <label for="solveCipher">解読する暗号文</label>
+    <textarea id="solveCipher" rows="4" maxlength="2000" spellcheck="false"></textarea>
+    <div class="button-row">
+      <button type="button" id="solveLoad">作業台に置く</button>
+      <label for="solveBlock">表示するブロック</label>
+      <select id="solveBlock" disabled></select>
+      <button type="button" id="solveRotateKey">型紙を1回転</button>
+    </div>
+    <label><input type="checkbox" id="solveReverse" /> 読み出しを逆順にする</label>
+    <div id="solve-notifications" class="notification-container" role="status" aria-live="polite"></div>
+    <div id="solveBoard" class="solve-board" aria-label="解読用の6×6作業台"></div>
+    <div id="solveReadout" class="solve-readout" aria-live="polite"></div>
+
+    <h3>鍵を総当たりする</h3>
+    <div class="solve-settings">
+      <label for="solveLang">採点する言語</label>
+      <select id="solveLang">
+        <option value="en">英語</option>
+        <option value="fr">フランス語</option>
+      </select>
+      <label for="solveDirections">調べる向き</label>
+      <select id="solveDirections">
+        <option value="both">両方</option>
+        <option value="cw">時計回り</option>
+        <option value="ccw">反時計回り</option>
+      </select>
+      <label><input type="checkbox" id="solveReverseScore" checked /> 逆順も採点</label>
+    </div>
+    <div class="button-row">
+      <button type="button" id="solveSearch">総当たり</button>
+      <button type="button" id="solveCancel" disabled>中断</button>
+    </div>
+    <progress id="solveProgress" max="1" value="0"></progress>
+    <p id="solveStatus" class="run-status" role="status" aria-live="polite"></p>
+    <p class="input-note">統計: 英語はProject Gutenberg 10作品、フランス語は6作品から作成しています。</p>
+    <div id="solveResults" class="solve-results"></div>
+  </section>
+
   <footer>
     <div class="footer">
       🔗 GitHubリポジトリはこちら（
@@ -173,6 +216,14 @@
             <li>「復号開始」ボタンで開始</li>
             <li>暗号化と同じ4つのボタンで読み取りを進めます</li>
             <li>サンドルフの見本は「逆順にする」で原文の順序に戻せます</li>
+          </ul>
+
+          <h4>4. 解読</h4>
+          <ul>
+            <li>暗号文を作業台に置くと、現在の鍵による4回転ぶんの読み出しを確認できます</li>
+            <li>穴を動かすとグリル作成タブと同じ鍵が更新されます</li>
+            <li>総当たりでは、英語またはフランス語の統計で上位10クラスを表示します</li>
+            <li>サンドルフの練習では、逆順を有効にして穴を動かします</li>
           </ul>
         </section>
 
@@ -242,6 +293,9 @@
 
   <script src="js/config.js"></script>
   <script src="js/grille-cipher-logic.js"></script>
+  <script src="js/ngram-models.js"></script>
+  <script src="js/grille-solver-logic.js"></script>
+  <script src="js/share.js"></script>
   <script src="js/messages.js"></script>
   <script src="js/samples.js"></script>
   <script src="js/notification-system.js"></script>
