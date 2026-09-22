@@ -14,7 +14,11 @@ function stripStringsAndComments(source) {
 }
 
 test('pure files use classic scripts with CommonJS test exports', () => {
-  for (const relative of ['js/grille-cipher-logic.js', 'js/messages.js', 'js/samples.js']) {
+  const pureFiles = [
+    'js/grille-cipher-logic.js', 'js/grille-solver-logic.js', 'js/ngram-models.js',
+    'js/share.js', 'js/messages.js', 'js/samples.js'
+  ];
+  for (const relative of pureFiles) {
     const source = fs.readFileSync(path.join(root, relative), 'utf8');
     assert.match(source, /typeof module[^\n]+module\.exports/);
     assert.doesNotMatch(source, /\b(?:export|import)\s/);
@@ -56,6 +60,20 @@ test('retired classes are absent and resilient interactions remain', () => {
   assert.match(keyboard, /isCollapsed/);
   assert.match(keyboard, /dialog\[open\]/);
   assert.match(theme, /\btry\s*\{/);
+});
+
+test('phase 2 stays single-threaded, derives views from pure state, and has print CSS', () => {
+  const allJs = fs.readdirSync(path.join(root, 'js'))
+    .filter(name => name.endsWith('.js'))
+    .map(name => fs.readFileSync(path.join(root, 'js', name), 'utf8'))
+    .join('\n');
+  const controller = fs.readFileSync(path.join(root, 'js', 'ui-controller.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.doesNotMatch(allJs, /\bWorker\s*\(|importScripts\s*\(/);
+  assert.doesNotMatch(allJs, /\bviewBase\b/);
+  assert.doesNotMatch(controller, /['"]／['"]/);
+  assert.match(css, /@media\s+print/);
+  assert.match(css, /18mm/);
 });
 
 test('package and workflow stay dependency-free and run on Node 22', () => {

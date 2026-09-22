@@ -23,6 +23,37 @@ function showParseError(result) {
   uiController.showGrilleMessage(t(result.errorKey, result.params), 'error');
 }
 
+function syncShareHash() {
+  const hash = GrilleShare.format(uiController.state.key, uiController.state.direction);
+  history.replaceState(null, '', hash);
+}
+
+function currentShareUrl() {
+  const base = location.protocol === 'file:'
+    ? location.href.split('#')[0]
+    : `${location.origin}${location.pathname}`;
+  return `${base}${GrilleShare.format(uiController.state.key, uiController.state.direction)}`;
+}
+
+function loadShareHash() {
+  if (!location.hash) {
+    syncShareHash();
+    return;
+  }
+  const parsed = GrilleShare.parse(location.hash);
+  if (!parsed.ok) {
+    uiController.showGrilleMessage(t(parsed.errorKey === 'share.direction' ? parsed.errorKey : 'share.invalid'), 'error');
+    syncShareHash();
+    return;
+  }
+  uiController.setKey(parsed.key);
+  uiController.setDirection(parsed.direction);
+  uiController.showGrilleMessage(t('share.loaded', {
+    key: parsed.key,
+    direction: t(`solve.direction.${parsed.direction}`)
+  }), 'success');
+}
+
 function bindGrilleCreator() {
   document.getElementById('baseMatrix').addEventListener('change', () => {
     const values = Array.from(document.querySelectorAll('#baseMatrix select'), select => select.value);
@@ -80,6 +111,8 @@ function bindGrilleCreator() {
     document.getElementById('plainText').value = sample.plain;
     document.getElementById('cipherInput').value = sample.cipher;
     document.getElementById('solveCipher').value = sample.cipher;
+    const normalizedCipher = GrilleLogic.normalizeText(sample.cipher);
+    uiController.updateFrequencyLink('solveFrequencyLink', GrilleLogic.formatGroups(normalizedCipher.letters));
     const name = t(sample.nameKey);
     const note = sample.noteKey ? ` ${t(sample.noteKey)}` : '';
     uiController.showGrilleMessage(t('sample.loaded', { name }) + note, 'success');
@@ -220,6 +253,8 @@ document.addEventListener("DOMContentLoaded", () => {
     uiController.clearSolveSearch();
     uiController.state.solve.blocks = [];
     uiController.renderSolve();
+    const normalized = GrilleLogic.normalizeText(document.getElementById('solveCipher').value);
+    uiController.updateFrequencyLink('solveFrequencyLink', GrilleLogic.formatGroups(normalized.letters));
   });
   document.getElementById('solveLoad').addEventListener('click', () => uiController.loadSolve());
   document.getElementById('solveBlock').addEventListener('change', event => {
@@ -234,6 +269,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // その他のイベント
   document.getElementById(CONFIG.DOM_IDS.COPY_CIPHER).addEventListener("click", copyCipherText);
+  document.getElementById('printGrille').addEventListener('click', () => {
+    uiController.renderPrintSheet();
+    document.getElementById('printTitle').textContent = t('print.title', {
+      key: uiController.state.key,
+      direction: t(`solve.direction.${uiController.state.direction}`)
+    });
+    window.print();
+  });
+  document.getElementById('copyShareUrl').addEventListener('click', async () => {
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('clipboard');
+      await navigator.clipboard.writeText(currentShareUrl());
+      uiController.showGrilleMessage(t('share.copied'), 'success');
+    } catch (_error) {
+      uiController.showGrilleMessage(t('copy.failed'), 'error');
+    }
+  });
   
   // テーマ切り替え
   document.getElementById(CONFIG.DOM_IDS.THEME_TOGGLE).addEventListener("click", () => {
@@ -291,6 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 初期化
   resetAllModes();
+  loadShareHash();
 
   const randomFillerOption = document.getElementById('fillerRandom');
   randomFillerOption.disabled = !globalThis.crypto || typeof globalThis.crypto.getRandomValues !== 'function';

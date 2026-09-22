@@ -39,7 +39,9 @@ test('the required controls and accessible relationships exist', () => {
     'recoveredText', 'reverseOutput', 'copyRecovered', 'decrypt-notifications', 'helpButton',
     'themeToggle', 'showShortcutHelp', 'helpModal', 'helpModalClose', 'help-shortcuts', 'globalStatus',
     'solveCipher', 'solveLoad', 'solveBlock', 'solveBoard', 'solveReadout', 'solveSearch',
-    'solveCancel', 'solveProgress', 'solveResults', 'solveLang', 'solveReverseScore'
+    'solveCancel', 'solveProgress', 'solveResults', 'solveLang', 'solveReverseScore',
+    'printGrille', 'copyShareUrl', 'encryptFrequencyLink', 'solveFrequencyLink', 'printSheet',
+    'printTitle', 'printStencil', 'printPaper'
   ];
   for (const id of ids) assert.match(html, new RegExp(`\\bid="${id}"`), id);
   assert.doesNotMatch(html, /\bid="(?:generateGrille|toast)"/);
@@ -63,5 +65,6 @@ test('textareas, external links, and Japanese terminology meet the contract', ()
   for (const match of html.matchAll(/<a\b[^>]*target="_blank"[^>]*>/gi)) {
     assert.match(match[0], /rel="noopener noreferrer"/i);
   }
+  assert.equal((html.match(/href="https:\/\/ipusiron\.github\.io\/frequency-analyzer\/"/g) || []).length, 2);
   assert.doesNotMatch(html, /fonts\.googleapis\.com|復号化|全ての/);
 });

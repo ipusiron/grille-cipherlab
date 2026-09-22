@@ -49,6 +49,8 @@
       <button type="button" id="loadKey">鍵を読み込む</button>
       <button type="button" id="randomKey">ランダムなグリル</button>
       <button type="button" id="resetKey">既定に戻す</button>
+      <button type="button" id="printGrille">型紙を印刷</button>
+      <button type="button" id="copyShareUrl">共有URLをコピー</button>
     </div>
     <fieldset>
       <legend>回す向き</legend>
@@ -99,6 +101,7 @@
       <label for="cipherText">暗号文</label>
       <textarea id="cipherText" rows="2" maxlength="2000" spellcheck="false" readonly></textarea>
       <button type="button" id="copyCipher" disabled>コピー</button>
+      <a id="encryptFrequencyLink" href="https://ipusiron.github.io/frequency-analyzer/" target="_blank" rel="noopener noreferrer" hidden>頻度分析（Day009）で見る</a>
     </div>
   </section>
 
@@ -135,6 +138,7 @@
     <p>暗号文を作業台で読み、英語・フランス語のトライグラム統計を使って鍵を総当たりできます。</p>
     <label for="solveCipher">解読する暗号文</label>
     <textarea id="solveCipher" rows="4" maxlength="2000" spellcheck="false"></textarea>
+    <a id="solveFrequencyLink" href="https://ipusiron.github.io/frequency-analyzer/" target="_blank" rel="noopener noreferrer" hidden>頻度分析（Day009）で見る</a>
     <div class="button-row">
       <button type="button" id="solveLoad">作業台に置く</button>
       <label for="solveBlock">表示するブロック</label>
@@ -225,6 +229,13 @@
             <li>総当たりでは、英語またはフランス語の統計で上位10クラスを表示します</li>
             <li>サンドルフの練習では、逆順を有効にして穴を動かします</li>
           </ul>
+
+          <h4>印刷・共有・頻度分析</h4>
+          <ul>
+            <li>型紙を印刷し、黒い9マスをカッターで切り抜くと紙でも試せます</li>
+            <li>共有URLには鍵と向きだけを入れ、平文・暗号文は入れません</li>
+            <li>転置暗号では文字の頻度が変わらないため、Day009の頻度分析へ暗号文を渡して確かめられます</li>
+          </ul>
         </section>
 
         <section>
@@ -290,6 +301,16 @@
       </div>
     </div>
   </dialog>
+
+  <section id="printSheet" class="print-sheet" hidden aria-label="印刷用の回転グリル型紙と用紙">
+    <h1>Grille CipherLab</h1>
+    <h2 id="printTitle"></h2>
+    <p class="print-mark">▲</p>
+    <h3>型紙</h3>
+    <div id="printStencil" class="print-grid"></div>
+    <h3>用紙</h3>
+    <div id="printPaper" class="print-grid"></div>
+  </section>
 
   <script src="js/config.js"></script>
   <script src="js/grille-cipher-logic.js"></script>

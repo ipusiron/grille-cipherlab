@@ -80,7 +80,13 @@ const GrilleMessages = (() => {
     'solve.results.workbench': '作業台で見る',
     'solve.results.difference': '1位と2位の差: {difference}',
     'solve.direction.cw': '時計回り',
-    'solve.direction.ccw': '反時計回り'
+    'solve.direction.ccw': '反時計回り',
+    'message.separator': '／',
+    'print.title': '鍵 {key}・{direction}',
+    'share.direction': 'URLの向きはcwまたはccwで指定してください',
+    'share.loaded': 'URLの鍵 {key}（{direction}）を読み込みました',
+    'share.invalid': 'URLの鍵が読めません',
+    'share.copied': '共有URLをコピーしました'
   });
 
   function format(lang, key, params = {}) {

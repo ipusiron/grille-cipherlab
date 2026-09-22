@@ -126,6 +126,7 @@ class UIController {
     const legacyEncryptionGrid = this.getElement('encryptionGrid');
     if (legacyEncryptionGrid) legacyEncryptionGrid.replaceChildren();
     this.getElement('cipherText').value = '';
+    this.updateFrequencyLink('encryptFrequencyLink', '');
     this.getElement('nextRotation').disabled = true;
     const encryptionBoard = this.getElement('encryptionBoard');
     if (encryptionBoard) {
@@ -188,6 +189,7 @@ class UIController {
     if (changed) this.clearRuns(true);
     this.renderGrilleCreator();
     this.renderSolve();
+    if (typeof syncShareHash === 'function') syncShareHash();
     return true;
   }
 
@@ -197,6 +199,7 @@ class UIController {
     this.state.direction = next;
     this.renderGrilleCreator();
     this.renderSolve();
+    if (typeof syncShareHash === 'function') syncShareHash();
   }
 
   showGrilleMessage(message, type = 'info') {
@@ -218,7 +221,9 @@ class UIController {
     const notices = [];
     if (result.removed) notices.push(GrilleMessages.t('input.removed', { count: result.removed }));
     if (result.padCount) notices.push(GrilleMessages.t('encrypt.padded', { count: result.padCount }));
-    if (notices.length) NotificationSystem.info(notices.join('／'), 'encrypt-notifications', 0);
+    if (notices.length) {
+      NotificationSystem.info(notices.join(GrilleMessages.t('message.separator')), 'encrypt-notifications', 0);
+    }
     this.renderEncryption();
     return true;
   }
@@ -313,7 +318,9 @@ class UIController {
     }
     this.getElement('encryptionStatus').textContent = GrilleMessages.t(statusKey, params);
     this.getElement('encryptionProgressBar').style.width = `${view.total ? view.done / view.total * 100 : 0}%`;
-    this.getElement('cipherText').value = GrilleLogic.formatGroups(view.output);
+    const formatted = GrilleLogic.formatGroups(view.output);
+    this.getElement('cipherText').value = formatted;
+    this.updateFrequencyLink('encryptFrequencyLink', formatted);
     this.getElement('encFirst').disabled = view.done === 0;
     this.getElement('encPrev').disabled = view.done === 0;
     this.getElement('nextRotation').disabled = view.finished;
@@ -427,7 +434,39 @@ class UIController {
     NotificationSystem.success(GrilleMessages.t('solve.loaded', { blocks: checked.blocks.length }),
       'solve-notifications', 0);
     this.renderSolve();
+    this.updateFrequencyLink('solveFrequencyLink', GrilleLogic.formatGroups(checked.letters));
     return true;
+  }
+
+  updateFrequencyLink(id, text) {
+    const link = this.getElement(id);
+    if (!link) return;
+    const value = String(text || '');
+    link.hidden = !value;
+    link.href = value
+      ? `https://ipusiron.github.io/frequency-analyzer/?text=${encodeURIComponent(value)}`
+      : 'https://ipusiron.github.io/frequency-analyzer/';
+  }
+
+  renderPrintSheet() {
+    const stencil = this.getElement('printStencil');
+    const paper = this.getElement('printPaper');
+    stencil.replaceChildren();
+    paper.replaceChildren();
+    const holes = new Set(GrilleLogic.holesAt(this.state.key, 0, this.state.direction)
+      .map(cell => cell.join(',')));
+    for (let row = 0; row < GrilleLogic.SIZE; row++) {
+      for (let col = 0; col < GrilleLogic.SIZE; col++) {
+        const stencilCell = document.createElement('div');
+        stencilCell.className = 'print-cell';
+        if (holes.has(`${row},${col}`)) stencilCell.classList.add('is-hole');
+        stencil.appendChild(stencilCell);
+        const paperCell = document.createElement('div');
+        paperCell.className = 'print-cell';
+        paperCell.textContent = `${row + 1},${col + 1}`;
+        paper.appendChild(paperCell);
+      }
+    }
   }
 
   renderSolve() {
@@ -683,5 +722,6 @@ class UIController {
     this.getElement('solveBlock').replaceChildren();
     this.getElement('solveBoard').replaceChildren();
     this.getElement('solveReadout').replaceChildren();
+    this.updateFrequencyLink('solveFrequencyLink', '');
   }
 }

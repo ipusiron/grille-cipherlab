@@ -38,6 +38,9 @@
   --progress-bg: #e2e6ea;
   --progress-fill: #0077cc;
   --shadow: rgba(0, 0, 0, 0.12);
+  --print-black: #000000;
+  --print-white: #ffffff;
+  --print-line: #767676;
 }
 
 .dark-mode {
@@ -635,6 +638,57 @@ kbd {
   border-radius: 0.2rem;
   background: var(--bg-tertiary);
   color: var(--text-primary);
+}
+
+.print-sheet {
+  display: none;
+}
+
+.print-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 18mm);
+  width: 108mm;
+  margin-bottom: 10mm;
+}
+
+.print-cell {
+  display: grid;
+  width: 18mm;
+  height: 18mm;
+  place-items: center;
+  border: 0.25mm solid var(--print-line);
+  background: var(--print-white);
+  color: var(--print-black);
+}
+
+.print-cell.is-hole {
+  background: var(--print-black);
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  body {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: var(--print-white);
+    color: var(--print-black);
+  }
+
+  body > *:not(#printSheet) {
+    display: none !important;
+  }
+
+  #printSheet {
+    display: block !important;
+  }
+
+  .print-mark {
+    margin: 0 0 4mm;
+  }
 }
 
 @media (max-width: 480px) {
