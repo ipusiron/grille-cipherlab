@@ -64,7 +64,7 @@ function bindGrilleCreator() {
     const id = document.getElementById('sampleSelect').value;
     const sample = GrilleSamples.find(item => item.id === id);
     if (!sample) return;
-    uiController.clearRuns();
+    uiController.clearRuns(true);
     uiController.setKey(sample.key);
     uiController.setDirection(sample.direction);
     document.getElementById('plainText').value = sample.plain;
@@ -72,7 +72,6 @@ function bindGrilleCreator() {
     const name = t(sample.nameKey);
     const note = sample.noteKey ? ` ${t(sample.noteKey)}` : '';
     uiController.showGrilleMessage(t('sample.loaded', { name }) + note, 'success');
-    checkPlainTextAndUpdateButtons();
     checkCipherTextAndUpdateButtons();
   });
 
@@ -80,33 +79,22 @@ function bindGrilleCreator() {
   randomButton.disabled = !globalThis.crypto || typeof globalThis.crypto.getRandomValues !== 'function';
 }
 
-// 平文入力チェック
-function checkPlainTextAndUpdateButtons() {
-  const inputField = document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT);
-  const startButton = document.getElementById(CONFIG.DOM_IDS.START_ENCRYPTION);
-  const nextButton = document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION);
-  
-  if (inputField.value.trim() === "") {
-    startButton.disabled = true;
-    nextButton.disabled = true;
-  } else {
-    // 文字種検証
-    const charValidation = ValidationHelper.validateTextCharacters(inputField.value);
-    if (charValidation.errors.length > 0) {
-      startButton.disabled = true;
-      nextButton.disabled = true;
-      NotificationSystem.error(charValidation.errors[0], CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
-    } else {
-      startButton.disabled = false;
-      // 入力時に既存のエラーをクリア
-      NotificationSystem.clear(CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
-      
-      // 警告があれば表示（ボタンは有効のまま）
-      if (charValidation.warnings.length > 0) {
-        NotificationSystem.warning(charValidation.warnings[0], CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
-      }
+function randomFiller(count) {
+  const output = [];
+  while (output.length < count) {
+    const bytes = new Uint8Array(count - output.length);
+    crypto.getRandomValues(bytes);
+    for (const byte of bytes) {
+      if (byte < 234) output.push(String.fromCharCode(65 + byte % 26));
     }
   }
+  return output.join('');
+}
+
+function selectedFiller() {
+  return document.getElementById('fillerRandom').checked
+    ? randomFiller
+    : GrilleLogic.fixedFiller('X');
 }
 
 // 暗号文入力チェック
@@ -136,21 +124,16 @@ function checkCipherTextAndUpdateButtons() {
 }
 
 // コピー機能
-function copyCipherText() {
+async function copyCipherText() {
   const text = document.getElementById(CONFIG.DOM_IDS.CIPHER_TEXT).value;
-  if (!text) {
-    NotificationSystem.warning("コピーする暗号文がありません", CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
-    return;
+  if (!text) return;
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('clipboard');
+    await navigator.clipboard.writeText(text);
+    NotificationSystem.success(t('copy.done'), CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS, 0);
+  } catch (_error) {
+    NotificationSystem.error(t('copy.failed'), CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS, 0);
   }
-  
-  navigator.clipboard.writeText(text).then(() => {
-    const toast = document.getElementById(CONFIG.DOM_IDS.TOAST);
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2000);
-  }).catch(error => {
-    NotificationSystem.error("コピーに失敗しました", CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
-    console.error("Copy failed:", error);
-  });
 }
 
 // モードリセット
@@ -177,12 +160,13 @@ document.addEventListener("DOMContentLoaded", () => {
   keyboardManager = new KeyboardShortcutManager(uiController);
   themeManager = new ThemeManager();
 
-  // 平文入力時のチェック
+  // 平文や埋め草を変えたら、前の暗号化を取り消す
   document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT).addEventListener("input", () => {
-    checkPlainTextAndUpdateButtons();
-    document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
+    uiController.clearEncryption(true);
   });
-  checkPlainTextAndUpdateButtons();
+  document.querySelectorAll('input[name="filler"]').forEach(input => {
+    input.addEventListener('change', () => uiController.clearEncryption(true));
+  });
 
   // 暗号文入力時のチェック
   document.getElementById(CONFIG.DOM_IDS.CIPHER_INPUT).addEventListener("input", () => {
@@ -193,12 +177,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 暗号化モードのイベント
   document.getElementById(CONFIG.DOM_IDS.START_ENCRYPTION).addEventListener("click", () => {
-    uiController.startEncryption();
+    uiController.startEncryption(selectedFiller());
   });
   
   document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION).addEventListener("click", () => {
     uiController.nextRotationStep();
   });
+  document.getElementById('encFirst').addEventListener('click', () => uiController.setEncryptionDone(0));
+  document.getElementById('encPrev').addEventListener('click', () => {
+    uiController.setEncryptionDone(uiController.state.encryption.done - 1);
+  });
+  document.getElementById('encLast').addEventListener('click', () => {
+    const result = uiController.state.encryption.result;
+    if (result) uiController.setEncryptionDone(result.stepCount);
+  });
+  document.getElementById('encHideCard').addEventListener('change', () => uiController.renderEncryption());
 
   // 復号化モードのイベント
   document.getElementById(CONFIG.DOM_IDS.START_DECRYPTION).addEventListener("click", () => {
@@ -273,8 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
       keyboardManager.setCurrentMode(target);
       
       if (target === "encrypt") {
-        document.getElementById(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
-        checkPlainTextAndUpdateButtons();
       } else if (target === "decrypt") {
         document.getElementById(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
         checkCipherTextAndUpdateButtons();
@@ -284,6 +275,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 初期化
   resetAllModes();
+
+  const randomFillerOption = document.getElementById('fillerRandom');
+  randomFillerOption.disabled = !globalThis.crypto || typeof globalThis.crypto.getRandomValues !== 'function';
   
   // キーボードショートカット初期モード設定
   keyboardManager.setCurrentMode('grille');

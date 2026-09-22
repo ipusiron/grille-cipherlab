@@ -9,6 +9,7 @@ class UIController {
       encryptionGrid: this.createEmptyGrid(),
       plainChars: [],
       rotationCount: 0,
+      encryption: { result: null, done: 0 },
       
       // 復号化状態
       decryptionStep: 0,
@@ -114,20 +115,44 @@ class UIController {
     });
   }
 
-  clearRuns() {
+  clearEncryption(showMessage = false) {
+    const wasRunning = this.state.encryption.result !== null;
+    this.state.encryption = { result: null, done: 0 };
     this.state.encryptionGrid = this.createEmptyGrid();
     this.state.plainChars = [];
     this.state.rotationCount = 0;
+    const legacyEncryptionGrid = this.getElement('encryptionGrid');
+    if (legacyEncryptionGrid) legacyEncryptionGrid.replaceChildren();
+    this.getElement('cipherText').value = '';
+    this.getElement('nextRotation').disabled = true;
+    const encryptionBoard = this.getElement('encryptionBoard');
+    if (encryptionBoard) {
+      encryptionBoard.hidden = true;
+      encryptionBoard.replaceChildren();
+    }
+    const status = this.getElement('encryptionStatus');
+    if (status) status.textContent = '';
+    for (const id of ['encFirst', 'encPrev', 'encLast', 'copyCipher']) {
+      const button = this.getElement(id);
+      if (button) button.disabled = true;
+    }
+    this.getElement('encryptionProgressBar').style.width = '0%';
+    if (wasRunning && showMessage) {
+      NotificationSystem.info(GrilleMessages.t('run.cleared'), 'encrypt-notifications', 0);
+    }
+    return wasRunning;
+  }
+
+  clearRuns(showMessage = false) {
+    const wasRunning = this.clearEncryption(showMessage);
     this.state.decryptionGrid = this.createEmptyGrid();
     this.state.cipherChars = [];
     this.state.decryptionStep = 0;
     this.state.recoveredText = '';
-    this.getElement('encryptionGrid').replaceChildren();
     this.getElement('decryptionGrid').replaceChildren();
-    this.getElement('cipherText').value = '';
     this.getElement('recoveredText').value = '';
-    this.getElement('nextRotation').disabled = true;
     this.getElement('nextDecryption').disabled = true;
+    return wasRunning;
   }
 
   setKey(key) {
@@ -136,14 +161,14 @@ class UIController {
     const changed = parsed.key !== this.state.key;
     this.state.key = parsed.key;
     this.state.currentGrille = GrilleLogic.keyToGrille(parsed.key);
-    if (changed) this.clearRuns();
+    if (changed) this.clearRuns(true);
     this.renderGrilleCreator();
     return true;
   }
 
   setDirection(direction) {
     const next = direction === 'ccw' ? 'ccw' : 'cw';
-    if (next !== this.state.direction) this.clearRuns();
+    if (next !== this.state.direction) this.clearRuns(true);
     this.state.direction = next;
     this.renderGrilleCreator();
   }
@@ -283,130 +308,121 @@ class UIController {
   }
 
   // 暗号化の開始
-  startEncryption() {
-    const inputField = this.getElement(CONFIG.DOM_IDS.PLAIN_TEXT);
-    
-    // 入力検証
-    const textErrors = ValidationHelper.validateNotEmpty(inputField.value, "平文");
-    if (textErrors.length > 0) {
-      NotificationSystem.error(textErrors[0], "encrypt-notifications");
-      return;
+  startEncryption(filler) {
+    const result = GrilleLogic.encrypt(this.getElement('plainText').value, this.state.key, {
+      direction: this.state.direction,
+      filler
+    });
+    NotificationSystem.clear('encrypt-notifications');
+    if (!result.ok) {
+      NotificationSystem.error(GrilleMessages.t(result.errorKey, result.params), 'encrypt-notifications', 0);
+      return false;
     }
-    
-    // 文字種検証
-    const charValidation = ValidationHelper.validateTextCharacters(inputField.value);
-    if (charValidation.errors.length > 0) {
-      NotificationSystem.error(charValidation.errors[0], "encrypt-notifications");
-      return;
-    }
-    
-    const lengthErrors = ValidationHelper.validateTextLength(inputField.value);
-    if (lengthErrors.length > 0) {
-      NotificationSystem.warning(lengthErrors[0], "encrypt-notifications");
-      return;
-    }
-    
-    if (!this.state.currentGrille) {
-      NotificationSystem.error(ErrorMessages.GRILLE_NOT_GENERATED, "encrypt-notifications");
-      return;
-    }
-    
-    // エラーなしの場合、既存の通知をクリア
-    NotificationSystem.clear("encrypt-notifications");
-    
-    // 警告メッセージがあれば表示（処理は継続）
-    if (charValidation.warnings.length > 0) {
-      NotificationSystem.warning(charValidation.warnings[0], "encrypt-notifications");
-    }
-    
-    const normalizedText = this.cipher.normalizeText(inputField.value);
-    this.state.plainChars = normalizedText.split('');
-    this.state.encryptionGrid = this.createEmptyGrid();
-    this.state.rotationCount = 0;
-    
-    this.updateRotationLabel("rotationLabel", 0);
-    this.getElement("nextRotation").disabled = true;
-    this.getElement("cipherText").value = "";
-    
-    // 進捗表示の初期化
-    const totalChars = normalizedText.length;
-    const nextChars = this.getNextStepCharCount(0);
-    this.updateEncryptionProgress(0, totalChars, 0, nextChars);
-    
-    this.fillNextStep();
+    this.state.encryption = { result, done: 0 };
+    const notices = [];
+    if (result.removed) notices.push(GrilleMessages.t('input.removed', { count: result.removed }));
+    if (result.padCount) notices.push(GrilleMessages.t('encrypt.padded', { count: result.padCount }));
+    if (notices.length) NotificationSystem.info(notices.join('／'), 'encrypt-notifications', 0);
+    this.renderEncryption();
+    return true;
   }
 
-  // 次のステップを埋める
-  fillNextStep() {
-    const result = this.cipher.encryptStep(
-      this.state.plainChars,
-      this.state.encryptionGrid,
-      this.state.currentGrille,
-      this.state.rotationCount
-    );
-    
-    this.state.encryptionGrid = result.grid;
-    this.drawEncryptionGrid();
-    
-    // 進捗表示を更新
-    const originalLength = this.cipher.normalizeText(this.getElement(CONFIG.DOM_IDS.PLAIN_TEXT).value).length;
-    const usedChars = originalLength - result.remainingChars;
-    const nextChars = result.remainingChars > 0 ? this.getNextStepCharCount(this.state.rotationCount + 1) : 0;
-    this.updateEncryptionProgress(this.state.rotationCount, originalLength, usedChars, nextChars);
-    
-    if (result.filled > 0 && result.remainingChars > 0) {
-      this.getElement(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = false;
-    } else {
-      this.getElement(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
-      this.showFinalCipher();
-      NotificationSystem.success(ErrorMessages.ENCRYPTION_COMPLETE, CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS);
-    }
+  setEncryptionDone(done) {
+    const result = this.state.encryption.result;
+    if (!result) return;
+    this.state.encryption.done = Math.max(0, Math.min(result.stepCount, done));
+    this.renderEncryption();
   }
 
-  // 暗号化グリッドの描画
-  drawEncryptionGrid() {
-    const container = this.getElement("encryptionGrid");
-    container.innerHTML = "";
-    this.setGridStyles(container);
-    
-    const holes = this.cipher.getGrilleHoles(
-      this.state.currentGrille,
-      this.state.rotationCount
-    );
-    const holeSet = new Set(holes.map(([r, c]) => `${r},${c}`));
-    
-    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
-      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
-        const isHole = holeSet.has(`${r},${c}`);
-        const content = this.state.encryptionGrid[r][c];
-        const classes = [];
-        
-        if (isHole) classes.push("cell-hole");
-        if (!isHole && content) classes.push("cell-faded");
-        
-        const cell = this.createCell(r, c, content, classes);
-        cell.id = `enc-${r}-${c}`;
-        container.appendChild(cell);
-      }
-    }
-  }
-
-  // 最終暗号文の表示
-  showFinalCipher() {
-    let result = "";
-    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
-      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
-        result += this.state.encryptionGrid[r][c] || "";
-      }
-    }
-    this.getElement("cipherText").value = result;
-  }
-
-  // 次の回転ステップ
   nextRotationStep() {
-    this.state.rotationCount++;
-    this.updateRotationLabel("rotationLabel", this.state.rotationCount);
-    this.applyRotationAnimation("encryptionGrid", () => this.fillNextStep());
+    this.setEncryptionDone(this.state.encryption.done + 1);
+  }
+
+  renderBoard(containerId, view, mode) {
+    const container = this.getElement(containerId);
+    const board = document.createElement('div');
+    board.className = 'board';
+    board.setAttribute('role', 'img');
+
+    const paper = document.createElement('div');
+    paper.className = 'paper';
+    const fresh = new Set(view.fresh.map(cell => cell.join(',')));
+    view.paper.forEach((row, rowIndex) => {
+      Array.from(row).forEach((char, colIndex) => {
+        const cell = document.createElement('div');
+        cell.className = 'paper-cell';
+        cell.classList.toggle('is-fresh', fresh.has(`${rowIndex},${colIndex}`));
+        cell.textContent = char === '_' ? '' : char;
+        paper.appendChild(cell);
+      });
+    });
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.transform = `rotate(${view.angle}deg)`;
+    card.hidden = this.getElement(mode === 'encrypt' ? 'encHideCard' : 'decHideCard').checked;
+    const mark = document.createElement('span');
+    mark.className = 'card-mark';
+    mark.setAttribute('aria-hidden', 'true');
+    mark.textContent = '▲';
+    card.appendChild(mark);
+    const cardGrid = document.createElement('div');
+    cardGrid.className = 'card-grid';
+    const baseHoles = new Set(GrilleLogic.holesAt(this.state.key, 0, this.state.direction).map(cell => cell.join(',')));
+    for (let row = 0; row < GrilleLogic.SIZE; row++) {
+      for (let col = 0; col < GrilleLogic.SIZE; col++) {
+        const cell = document.createElement('div');
+        cell.className = 'card-cell';
+        cell.classList.toggle('is-hole', baseHoles.has(`${row},${col}`));
+        cardGrid.appendChild(cell);
+      }
+    }
+    card.appendChild(cardGrid);
+    board.append(paper, card);
+    container.replaceChildren(board);
+    container.hidden = false;
+
+    const letters = view.fresh.map(([row, col]) => view.paper[row][col]).join(' ');
+    const key = view.done ? 'encrypt.board' : 'encrypt.board.start';
+    const params = view.done ? {
+      block: view.blockIndex + 1,
+      blocks: view.blockCount,
+      turn: view.rotation + 1,
+      angle: view.angle,
+      letters
+    } : { blocks: view.blockCount };
+    board.setAttribute('aria-label', GrilleMessages.t(key, params));
+  }
+
+  renderEncryption() {
+    const { result, done } = this.state.encryption;
+    if (!result) return;
+    const view = GrilleLogic.encryptionView(result, done);
+    this.renderBoard('encryptionBoard', view, 'encrypt');
+    const totalLetters = result.blocks.length * GrilleLogic.BLOCK;
+    let statusKey = 'encrypt.status';
+    let params = {
+      block: view.blockIndex + 1,
+      blocks: view.blockCount,
+      turn: view.rotation + 1,
+      angle: view.angle,
+      placed: view.placed,
+      total: totalLetters
+    };
+    if (!view.done) {
+      statusKey = 'encrypt.status.start';
+      params = { blocks: view.blockCount, total: totalLetters };
+    } else if (view.finished) {
+      statusKey = 'encrypt.status.done';
+    }
+    this.getElement('encryptionStatus').textContent = GrilleMessages.t(statusKey, params);
+    this.getElement('encryptionProgressBar').style.width = `${view.total ? view.done / view.total * 100 : 0}%`;
+    this.getElement('cipherText').value = GrilleLogic.formatGroups(view.output);
+    this.getElement('encFirst').disabled = view.done === 0;
+    this.getElement('encPrev').disabled = view.done === 0;
+    this.getElement('nextRotation').disabled = view.finished;
+    this.getElement('encLast').disabled = view.finished;
+    this.getElement('copyCipher').disabled = !view.finished;
   }
 
   // 復号化の開始
@@ -627,22 +643,7 @@ class UIController {
 
   // 初期化関数
   initEncryptionMode() {
-    this.state.encryptionGrid = this.createEmptyGrid();
-    this.state.encryptionStep = 0;
-    this.state.rotationCount = 0;
-    
-    this.updateRotationLabel(CONFIG.DOM_IDS.ROTATION_LABEL, 0);
-    this.getElement(CONFIG.DOM_IDS.NEXT_ROTATION).disabled = true;
-    this.getElement(CONFIG.DOM_IDS.CIPHER_TEXT).value = "";
-    this.getElement(CONFIG.DOM_IDS.PLAIN_TEXT).value = CONFIG.DEFAULT_PLAINTEXT;
-    
-    const container = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_GRID);
-    container.innerHTML = "";
-    container.style.display = "none";
-    
-    // 進捗表示をリセット
-    this.resetProgress('encryption');
-    
+    this.clearEncryption(false);
     this.getElement(CONFIG.DOM_IDS.START_ENCRYPTION).disabled = false;
   }
 

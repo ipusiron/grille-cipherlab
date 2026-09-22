@@ -87,6 +87,7 @@ class KeyboardShortcutManager {
 
   // スペースキー処理（進むボタン）
   handleSpaceKey(event) {
+    if (event.repeat) return;
     event.preventDefault();
     
     switch (this.currentMode) {

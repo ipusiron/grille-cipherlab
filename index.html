@@ -68,34 +68,31 @@
   <section id="encrypt" class="tab-content">
     <h2>② 暗号化モード</h2>
     <p>グリルを使って平文を暗号化します。</p>
-    <label for="plainText">平文入力：</label>
-    <textarea id="plainText" rows="3">HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY</textarea>
-    <div id="limitNote" style="color:#666; font-size:0.9em; margin-top:0.3em;">※ 空白は無視されます</div>
-    <button id="startEncryption">暗号化開始</button>
-    <button id="nextRotation" disabled>▶進む</button>
-    <div id="rotationLabel">回転：0度</div>
-    
-    <!-- 詳細進捗表示 -->
-    <div id="encryptionProgress" class="progress-container" style="display: none;">
-      <div class="progress-info">
-        <span id="encryptionStepInfo">ステップ 1/4</span>
-        <span id="encryptionCharInfo">0/36 文字埋込済み</span>
-      </div>
-      <div class="progress-bar">
-        <div id="encryptionProgressBar" class="progress-fill"></div>
-      </div>
-      <div id="encryptionNextInfo" class="next-info">次：9文字を埋め込みます</div>
+    <label for="plainText">平文入力</label>
+    <textarea id="plainText" rows="3" maxlength="2000" spellcheck="false" autocapitalize="off">HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY</textarea>
+    <p id="limitNote" class="input-note">英字以外（空白・数字・記号）は取り除きます。全角の英字とアクセントつきの英字は、半角の英字に直します。36文字に足りないぶんは埋め草で埋めます。</p>
+    <fieldset>
+      <legend>埋め草</legend>
+      <label><input type="radio" id="fillerX" name="filler" value="x" checked /> Xで埋める（既定）</label>
+      <label><input type="radio" id="fillerRandom" name="filler" value="random" /> ランダムな英字で埋める</label>
+    </fieldset>
+    <button type="button" id="startEncryption">暗号化開始</button>
+    <div class="step-controls">
+      <button type="button" id="encFirst" disabled>最初へ</button>
+      <button type="button" id="encPrev" disabled>戻る</button>
+      <button type="button" id="nextRotation" disabled>▶進む</button>
+      <button type="button" id="encLast" disabled>最後まで</button>
     </div>
-    
+    <p id="encryptionStatus" class="run-status" role="status"></p>
+    <div class="progress-bar"><div id="encryptionProgressBar" class="progress-fill"></div></div>
     <div id="encrypt-notifications" class="notification-container"></div>
-    <div id="encryptionGrid"></div>
-    <div style="margin-top: 1em;">
-      <label for="cipherText">暗号文：</label>
+    <div id="encryptionBoard" class="board-wrap" hidden></div>
+    <label><input type="checkbox" id="encHideCard" /> 型紙を外して紙だけを見る</label>
+    <p class="board-legend">▲＝型紙の上辺／枠のあるマス＝穴／黄色＝いま書いた文字</p>
+    <div class="output-group">
+      <label for="cipherText">暗号文</label>
       <textarea id="cipherText" rows="2" readonly></textarea>
-      <div style="position: relative; display: inline-block;">
-        <button id="copyCipher">コピー</button>
-        <div id="toast" class="toast">コピーしました</div>
-      </div>
+      <button type="button" id="copyCipher" disabled>コピー</button>
     </div>
   </section>
 
