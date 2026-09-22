@@ -2,10 +2,6 @@
 
 class NotificationSystem {
   static show(message, type = 'info', containerId = null, duration = null) {
-    // デフォルト期間を設定から取得
-    if (duration === null) {
-      duration = CONFIG.NOTIFICATION_DURATION[type.toUpperCase()] || CONFIG.NOTIFICATION_DURATION.INFO;
-    }
     // 既存の通知をクリア
     if (containerId) {
       this.clear(containerId);
@@ -20,7 +16,6 @@ class NotificationSystem {
     if (containerId) {
       container = document.getElementById(containerId);
       if (!container) {
-        console.warn(`Container with id '${containerId}' not found`);
         container = document.body;
       }
     } else {
@@ -28,15 +23,6 @@ class NotificationSystem {
     }
     
     container.appendChild(notification);
-    
-    // 自動削除（durationが0の場合は手動削除のみ）
-    if (duration > 0) {
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.remove();
-        }
-      }, duration);
-    }
     
     return notification;
   }

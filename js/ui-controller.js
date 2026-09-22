@@ -1,24 +1,10 @@
 // UI制御部分
 
 class UIController {
-  constructor(cipher) {
-    this.cipher = cipher;
+  constructor() {
     this.state = {
-      // 暗号化状態
-      encryptionStep: 0,
-      encryptionGrid: this.createEmptyGrid(),
-      plainChars: [],
-      rotationCount: 0,
       encryption: { result: null, done: 0 },
-      
-      // 復号化状態
-      decryptionStep: 0,
-      decryptionGrid: this.createEmptyGrid(),
-      cipherChars: [],
-      recoveredText: '',
       decryption: { result: null, done: 0, reversed: false },
-      
-      // 共通
       key: GrilleLogic.DEFAULT_KEY,
       direction: 'cw',
       currentGrille: GrilleLogic.keyToGrille(GrilleLogic.DEFAULT_KEY)
@@ -26,7 +12,7 @@ class UIController {
   }
 
   createEmptyGrid() {
-    return Array.from({ length: CONFIG.GRILLE_SIZE }, () => Array(CONFIG.GRILLE_SIZE).fill(''));
+    return Array.from({ length: GrilleLogic.SIZE }, () => Array(GrilleLogic.SIZE).fill(''));
   }
 
   // DOM要素の取得（キャッシュ）
@@ -119,9 +105,6 @@ class UIController {
   clearEncryption(showMessage = false) {
     const wasRunning = this.state.encryption.result !== null;
     this.state.encryption = { result: null, done: 0 };
-    this.state.encryptionGrid = this.createEmptyGrid();
-    this.state.plainChars = [];
-    this.state.rotationCount = 0;
     const legacyEncryptionGrid = this.getElement('encryptionGrid');
     if (legacyEncryptionGrid) legacyEncryptionGrid.replaceChildren();
     this.getElement('cipherText').value = '';
@@ -153,10 +136,6 @@ class UIController {
   clearDecryption(showMessage = false) {
     const wasRunning = this.state.decryption.result !== null;
     this.state.decryption = { result: null, done: 0, reversed: false };
-    this.state.decryptionGrid = this.createEmptyGrid();
-    this.state.cipherChars = [];
-    this.state.decryptionStep = 0;
-    this.state.recoveredText = '';
     const legacyGrid = this.getElement('decryptionGrid');
     if (legacyGrid) legacyGrid.replaceChildren();
     this.getElement('recoveredText').value = '';
@@ -202,136 +181,6 @@ class UIController {
 
   showGrilleMessage(message, type = 'info') {
     NotificationSystem.show(message, type, 'grille-notifications', 0);
-  }
-
-  // グリッドスタイルの設定
-  setGridStyles(container) {
-    container.style.display = "grid";
-    container.style.gridTemplateColumns = `repeat(${CONFIG.GRILLE_SIZE}, ${CONFIG.CELL_SIZE}px)`;
-    container.style.gridTemplateRows = `repeat(${CONFIG.GRILLE_SIZE}, ${CONFIG.CELL_SIZE}px)`;
-    container.style.gap = `${CONFIG.GRID_GAP}px`;
-    container.style.width = "fit-content";
-    container.style.margin = "1em auto";
-  }
-
-  // 回転アニメーション
-  applyRotationAnimation(elementId, callback) {
-    const element = this.getElement(elementId);
-    element.classList.add(CONFIG.CSS_CLASSES.ROTATE_ANIMATION);
-    setTimeout(() => {
-      element.classList.remove(CONFIG.CSS_CLASSES.ROTATE_ANIMATION);
-      if (callback) callback();
-    }, CONFIG.ANIMATION_DURATION);
-  }
-
-  // セルの作成
-  createCell(r, c, content, classes = []) {
-    const cell = document.createElement("div");
-    cell.className = CONFIG.CSS_CLASSES.CELL;
-    classes.forEach(cls => cell.classList.add(cls));
-    cell.id = `cell-${r}-${c}`;
-    if (content) cell.textContent = content;
-    return cell;
-  }
-
-  // グリル生成
-  generateGrille() {
-    const base = this.getBaseMatrixValues();
-    
-    // バリデーション
-    const errors = ValidationHelper.validateBaseMatrix(base);
-    if (errors.length > 0) {
-      NotificationSystem.error(errors[0], CONFIG.DOM_IDS.GRILLE_NOTIFICATIONS);
-      return null;
-    }
-    
-    try {
-      const grille = this.cipher.generateGrille(base);
-      this.state.currentGrille = grille;
-      this.renderGrillePreview(grille);
-      
-      // 成功通知
-      NotificationSystem.success(ErrorMessages.GRILLE_GENERATION_SUCCESS, CONFIG.DOM_IDS.GRILLE_NOTIFICATIONS);
-      
-      return grille;
-    } catch (error) {
-      NotificationSystem.error("グリルの生成中にエラーが発生しました", CONFIG.DOM_IDS.GRILLE_NOTIFICATIONS);
-      console.error("Grille generation error:", error);
-      return null;
-    }
-  }
-
-  // ベース行列の値を取得
-  getBaseMatrixValues() {
-    const inputs = document.querySelectorAll(`#${CONFIG.DOM_IDS.BASE_MATRIX} input`);
-    const matrix = Array.from({ length: CONFIG.BASE_SIZE }, () => Array(CONFIG.BASE_SIZE).fill(0));
-    
-    inputs.forEach(input => {
-      const r = parseInt(input.dataset.row);
-      const c = parseInt(input.dataset.col);
-      matrix[r][c] = parseInt(input.value);
-    });
-    
-    return matrix;
-  }
-
-  // グリルプレビューの描画
-  renderGrillePreview(grille) {
-    const container = this.getElement(CONFIG.DOM_IDS.GRILLE_PREVIEW);
-    container.innerHTML = "";
-    
-    const base = this.getBaseMatrixValues();
-    const regions = [
-      base,
-      this.cipher.rotateMatrix(base, 1),
-      this.cipher.rotateMatrix(base, 2),
-      this.cipher.rotateMatrix(base, 3)
-    ];
-    
-    const offsets = CONFIG.GRILLE_OFFSETS;
-    
-    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
-      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
-        const cell = document.createElement("div");
-        cell.className = CONFIG.CSS_CLASSES.CELL;
-        
-        // 境界線の設定
-        if ((r === 0 || r === 3) && (c >= 0 && c <= 5)) cell.style.borderTop = "2px solid #888";
-        if ((r === 2 || r === 5) && (c >= 0 && c <= 5)) cell.style.borderBottom = "2px solid #888";
-        if ((c === 0 || c === 3) && (r >= 0 && r <= 5)) cell.style.borderLeft = "2px solid #888";
-        if ((c === 2 || c === 5) && (r >= 0 && r <= 5)) cell.style.borderRight = "2px solid #888";
-        
-        // 領域の値を表示
-        for (let i = 0; i < CONFIG.ROTATION_COUNT; i++) {
-          const [rowOffset, colOffset] = offsets[i];
-          if (r >= rowOffset && r < rowOffset + CONFIG.BASE_SIZE && c >= colOffset && c < colOffset + CONFIG.BASE_SIZE) {
-            const localR = r - rowOffset;
-            const localC = c - colOffset;
-            const val = regions[i][localR][localC];
-            cell.textContent = val;
-            cell.style.opacity = "0.4";
-            break;
-          }
-        }
-        
-        // グリルの穴を表示
-        if (grille[r][c]) {
-          cell.classList.add(CONFIG.CSS_CLASSES.CELL_HOLE);
-          const mark = document.createElement("div");
-          mark.textContent = "○";
-          mark.style.position = "absolute";
-          mark.style.top = "50%";
-          mark.style.left = "50%";
-          mark.style.transform = "translate(-50%, -50%)";
-          mark.style.zIndex = "2";
-          mark.style.fontSize = "1.2em";
-          cell.style.position = "relative";
-          cell.appendChild(mark);
-        }
-        
-        container.appendChild(cell);
-      }
-    }
   }
 
   // 暗号化の開始
@@ -519,101 +368,6 @@ class UIController {
     this.getElement('reverseOutput').disabled = !view.output;
     this.getElement('reverseOutput').setAttribute('aria-pressed', String(reversed));
     this.getElement('copyRecovered').disabled = !view.finished;
-  }
-
-  // セルのアニメーション
-  animateCell(r, c, gridId) {
-    const id = gridId === "encryptionGrid" ? `enc-${r}-${c}` : `dec-${r}-${c}`;
-    const cell = this.getElement(id);
-    if (!cell) return;
-    
-    cell.classList.add("highlight-once");
-    setTimeout(() => cell.classList.remove("highlight-once"), 400);
-  }
-
-  // 回転ラベルの更新
-  updateRotationLabel(elementId, rotationCount) {
-    this.getElement(elementId).textContent = `回転：${rotationCount * 90}度`;
-  }
-
-  // 進捗表示の更新（暗号化）
-  updateEncryptionProgress(step, totalChars, usedChars, nextChars = 0) {
-    const progressContainer = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_PROGRESS);
-    const stepInfo = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_STEP_INFO);
-    const charInfo = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_CHAR_INFO);
-    const progressBar = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_PROGRESS_BAR);
-    const nextInfo = this.getElement(CONFIG.DOM_IDS.ENCRYPTION_NEXT_INFO);
-    
-    // 進捗コンテナを表示
-    progressContainer.style.display = 'block';
-    
-    // ステップ情報
-    stepInfo.textContent = `ステップ ${step + 1}/${CONFIG.ROTATION_COUNT}`;
-    
-    // 文字情報
-    charInfo.textContent = `${usedChars}/${totalChars} 文字埋込済み`;
-    
-    // 進捗バー
-    const percentage = totalChars > 0 ? (usedChars / totalChars) * 100 : 0;
-    progressBar.style.width = `${percentage}%`;
-    
-    // 次の情報
-    if (step < CONFIG.ROTATION_COUNT - 1 && nextChars > 0) {
-      nextInfo.textContent = `次：${nextChars}文字を埋め込みます`;
-    } else if (usedChars >= totalChars) {
-      nextInfo.textContent = '暗号化完了';
-    } else {
-      nextInfo.textContent = '最終ステップ';
-    }
-  }
-
-  // 進捗表示の更新（復号化）
-  updateDecryptionProgress(step, totalRecovered, nextChars = 0) {
-    const progressContainer = this.getElement(CONFIG.DOM_IDS.DECRYPTION_PROGRESS);
-    const stepInfo = this.getElement(CONFIG.DOM_IDS.DECRYPTION_STEP_INFO);
-    const charInfo = this.getElement(CONFIG.DOM_IDS.DECRYPTION_CHAR_INFO);
-    const progressBar = this.getElement(CONFIG.DOM_IDS.DECRYPTION_PROGRESS_BAR);
-    const nextInfo = this.getElement(CONFIG.DOM_IDS.DECRYPTION_NEXT_INFO);
-    
-    // 進捗コンテナを表示
-    progressContainer.style.display = 'block';
-    
-    // ステップ情報（復号化は現在実行中のステップを表示）
-    const displayStep = step === 0 ? 1 : Math.min(step, CONFIG.ROTATION_COUNT);
-    stepInfo.textContent = `ステップ ${displayStep}/${CONFIG.ROTATION_COUNT}`;
-    
-    // 文字情報
-    charInfo.textContent = `${totalRecovered} 文字復号済み`;
-    
-    // 進捗バー（復号化は完了ステップ数ベース）
-    const percentage = (step / CONFIG.ROTATION_COUNT) * 100;
-    progressBar.style.width = `${percentage}%`;
-    
-    // 次の情報
-    if (step < CONFIG.ROTATION_COUNT - 1) {
-      nextInfo.textContent = `次：${nextChars}文字を読み取ります`;
-    } else {
-      nextInfo.textContent = '復号化完了';
-    }
-  }
-
-  // 進捗表示をリセット
-  resetProgress(mode = 'encryption') {
-    const progressId = mode === 'encryption' 
-      ? CONFIG.DOM_IDS.ENCRYPTION_PROGRESS 
-      : CONFIG.DOM_IDS.DECRYPTION_PROGRESS;
-    
-    const progressContainer = this.getElement(progressId);
-    if (progressContainer) {
-      progressContainer.style.display = 'none';
-    }
-  }
-
-  // 次のステップで埋まる文字数を計算
-  getNextStepCharCount(rotationStep) {
-    if (!this.state.currentGrille) return 0;
-    const holes = this.cipher.getGrilleHoles(this.state.currentGrille, rotationStep);
-    return holes.length;
   }
 
   // 初期化関数

@@ -1,9 +1,18 @@
 // アプリケーション初期化
-let cipher;
 let uiController;
 let keyboardManager;
 let themeManager;
+let globalStatusTimer;
 const t = (key, params) => GrilleMessages.t(key, params);
+
+function showGlobalStatus(message) {
+  const status = document.getElementById('globalStatus');
+  clearTimeout(globalStatusTimer);
+  status.textContent = message;
+  globalStatusTimer = setTimeout(() => {
+    status.textContent = '';
+  }, 1500);
+}
 
 // 🔹 グリル作成モード：3x3初期化・回転・6x6生成
 function initBaseMatrix() {
@@ -129,19 +138,27 @@ function resetAllModes() {
   // すべての通知をクリア
   NotificationSystem.clearAll();
   
-  const sections = document.querySelectorAll(".tab-content");
-  sections.forEach(sec => sec.classList.remove("active"));
-  document.getElementById("grille").classList.add("active");
-  const tabs = document.querySelectorAll(".tab-button");
-  tabs.forEach(tab => tab.classList.remove("active"));
-  tabs[0].classList.add("active");
+  activateTab(document.querySelector('[role="tab"]'), false);
+}
+
+function activateTab(tab, focus = true) {
+  document.querySelectorAll('[role="tab"]').forEach(item => {
+    const selected = item === tab;
+    item.classList.toggle('active', selected);
+    item.setAttribute('aria-selected', String(selected));
+    item.tabIndex = selected ? 0 : -1;
+    const panel = document.getElementById(item.getAttribute('aria-controls'));
+    panel.classList.toggle('active', selected);
+    panel.hidden = !selected;
+  });
+  keyboardManager.setCurrentMode(tab.dataset.target);
+  if (focus) tab.focus();
 }
 
 // イベント登録
 document.addEventListener("DOMContentLoaded", () => {
   // インスタンス作成
-  cipher = new GrilleCipher();
-  uiController = new UIController(cipher);
+  uiController = new UIController();
   keyboardManager = new KeyboardShortcutManager(uiController);
   themeManager = new ThemeManager();
 
@@ -199,11 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // その他のイベント
   document.getElementById(CONFIG.DOM_IDS.COPY_CIPHER).addEventListener("click", copyCipherText);
   
-  // ショートカットヘルプ
-  document.getElementById("showShortcutHelp").addEventListener("click", () => {
-    keyboardManager.showHelp();
-  });
-  
   // テーマ切り替え
   document.getElementById(CONFIG.DOM_IDS.THEME_TOGGLE).addEventListener("click", () => {
     themeManager.toggleTheme();
@@ -211,35 +223,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ヘルプモーダル
   const helpButton = document.getElementById(CONFIG.DOM_IDS.HELP_BUTTON);
+  const shortcutHelpButton = document.getElementById("showShortcutHelp");
   const helpModal = document.getElementById(CONFIG.DOM_IDS.HELP_MODAL);
   const helpClose = document.getElementById(CONFIG.DOM_IDS.HELP_CLOSE);
 
-  // ヘルプボタンクリック
+  let helpReturnFocus = null;
+  shortcutHelpButton.addEventListener("click", () => {
+    helpReturnFocus = shortcutHelpButton;
+    keyboardManager.showHelp();
+  });
   helpButton.addEventListener("click", () => {
-    helpModal.classList.add("show");
-    document.body.style.overflow = "hidden"; // スクロール無効化
+    helpReturnFocus = helpButton;
+    helpModal.showModal();
+    helpClose.focus();
   });
 
-  // 閉じるボタンクリック
   helpClose.addEventListener("click", () => {
-    helpModal.classList.remove("show");
-    document.body.style.overflow = ""; // スクロール復活
+    helpModal.close();
   });
 
-  // オーバーレイクリックで閉じる
   helpModal.addEventListener("click", (e) => {
-    if (e.target === helpModal) {
-      helpModal.classList.remove("show");
-      document.body.style.overflow = "";
-    }
+    if (e.target === helpModal) helpModal.close();
   });
-
-  // ESCキーで閉じる
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && helpModal.classList.contains("show")) {
-      helpModal.classList.remove("show");
-      document.body.style.overflow = "";
-    }
+  helpModal.addEventListener('close', () => {
+    if (helpReturnFocus) helpReturnFocus.focus();
+    helpReturnFocus = null;
   });
 
   // グリル生成
@@ -247,21 +255,18 @@ document.addEventListener("DOMContentLoaded", () => {
   bindGrilleCreator();
 
   // タブ切り替え
-  const tabs = document.querySelectorAll(".tab-button");
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
   tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      const target = tab.dataset.target;
-      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(sec => sec.classList.remove("active"));
-      tab.classList.add("active");
-      document.getElementById(target).classList.add("active");
-      
-      // キーボードショートカットのモードを更新
-      keyboardManager.setCurrentMode(target);
-      
-      if (target === "encrypt") {
-      } else if (target === "decrypt") {
-      }
+    tab.addEventListener('click', () => activateTab(tab, false));
+    tab.addEventListener('keydown', event => {
+      let index = tabs.indexOf(tab);
+      if (event.key === 'ArrowRight') index = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') index = (index - 1 + tabs.length) % tabs.length;
+      else if (event.key === 'Home') index = 0;
+      else if (event.key === 'End') index = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      activateTab(tabs[index]);
     });
   });
 

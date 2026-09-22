@@ -3,28 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+  <meta name="referrer" content="no-referrer" />
   <title>Grille CipherLab</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <noscript>このツールはJavaScriptを有効にすると動きます。</noscript>
   <h1>🌀 Grille CipherLab</h1>
-    <p>回転グリル暗号の仕組みを体験できるツール</p>
-    <div style="text-align: right; margin-bottom: 1em;">
-      <button id="helpButton" title="ヘルプ">❓</button>
-      <button id="themeToggle" title="テーマ切り替え">☀️</button>
-      <button id="showShortcutHelp">⌨️ ショートカット</button>
-    </div>
+  <p>回転グリル暗号の仕組みを体験できるツール</p>
+  <div class="header-actions">
+    <button type="button" id="helpButton" title="ヘルプ" aria-label="ヘルプ">❓</button>
+    <button type="button" id="themeToggle" title="テーマ切り替え" aria-label="テーマの切り替え">☀️</button>
+    <button type="button" id="showShortcutHelp">⌨️ ショートカット</button>
+  </div>
+  <p id="globalStatus" class="global-status" role="status" aria-live="polite"></p>
 
   <!-- モード切り替えタブ -->
-  <div class="tabs">
-    <button class="tab-button active" data-target="grille">① グリル作成</button>
-    <button class="tab-button" data-target="encrypt">② 暗号化</button>
-    <button class="tab-button" data-target="decrypt">③ 復号</button>
+  <div class="tabs" role="tablist" aria-label="操作モード">
+    <button type="button" class="tab-button active" id="tab-grille" role="tab" data-target="grille" aria-controls="grille" aria-selected="true" tabindex="0">① グリル作成</button>
+    <button type="button" class="tab-button" id="tab-encrypt" role="tab" data-target="encrypt" aria-controls="encrypt" aria-selected="false" tabindex="-1">② 暗号化</button>
+    <button type="button" class="tab-button" id="tab-decrypt" role="tab" data-target="decrypt" aria-controls="decrypt" aria-selected="false" tabindex="-1">③ 復号</button>
   </div>
 
   <!-- モード① グリル作成 -->
-  <section id="grille" class="tab-content active">
+  <section id="grille" class="tab-content active" role="tabpanel" aria-labelledby="tab-grille">
     <h2>① グリル作成モード</h2>
     <p>穴は9個。4回転で36マスをちょうど1回ずつ覆います。鍵は4^9＝262,144通りです。</p>
     <div class="grille-editor-layout">
@@ -52,7 +57,7 @@
     <details>
       <summary>穴のパターンと見本</summary>
       <label for="patternText">穴のパターン（Xが穴、.が穴でないマス）</label>
-      <textarea id="patternText" rows="6" spellcheck="false"></textarea>
+      <textarea id="patternText" rows="6" maxlength="100" spellcheck="false"></textarea>
       <div class="button-row">
         <button type="button" id="loadPattern">パターンを読み込む</button>
         <button type="button" id="copyPattern">コピー</button>
@@ -61,11 +66,11 @@
       <select id="sampleSelect"></select>
       <button type="button" id="loadSample">見本を読み込む</button>
     </details>
-    <div id="grille-notifications" class="notification-container"></div>
+    <div id="grille-notifications" class="notification-container" role="status" aria-live="polite"></div>
   </section>
 
   <!-- モード② 暗号化 -->
-  <section id="encrypt" class="tab-content">
+  <section id="encrypt" class="tab-content" role="tabpanel" aria-labelledby="tab-encrypt" hidden>
     <h2>② 暗号化モード</h2>
     <p>グリルを使って平文を暗号化します。</p>
     <label for="plainText">平文入力</label>
@@ -85,19 +90,19 @@
     </div>
     <p id="encryptionStatus" class="run-status" role="status"></p>
     <div class="progress-bar"><div id="encryptionProgressBar" class="progress-fill"></div></div>
-    <div id="encrypt-notifications" class="notification-container"></div>
+    <div id="encrypt-notifications" class="notification-container" role="status" aria-live="polite"></div>
     <div id="encryptionBoard" class="board-wrap" hidden></div>
     <label><input type="checkbox" id="encHideCard" /> 型紙を外して紙だけを見る</label>
     <p class="board-legend">▲＝型紙の上辺／枠のあるマス＝穴／黄色＝いま書いた文字</p>
     <div class="output-group">
       <label for="cipherText">暗号文</label>
-      <textarea id="cipherText" rows="2" readonly></textarea>
+      <textarea id="cipherText" rows="2" maxlength="2000" spellcheck="false" readonly></textarea>
       <button type="button" id="copyCipher" disabled>コピー</button>
     </div>
   </section>
 
   <!-- モード③ 復号 -->
-  <section id="decrypt" class="tab-content">
+  <section id="decrypt" class="tab-content" role="tabpanel" aria-labelledby="tab-decrypt" hidden>
     <h2>③ 復号モード</h2>
     <p>暗号文を入力し、グリルを重ねて平文を復元します。</p>
     <label for="cipherInput">暗号文入力</label>
@@ -111,13 +116,13 @@
     </div>
     <p id="decryptionStatus" class="run-status" role="status"></p>
     <div class="progress-bar"><div id="decryptionProgressBar" class="progress-fill"></div></div>
-    <div id="decrypt-notifications" class="notification-container"></div>
+    <div id="decrypt-notifications" class="notification-container" role="status" aria-live="polite"></div>
     <div id="decryptionBoard" class="board-wrap" hidden></div>
     <label><input type="checkbox" id="decHideCard" /> 型紙を外して紙だけを見る</label>
     <p class="board-legend">▲＝型紙の上辺／枠のあるマス＝穴／黄色＝いま読んだ文字</p>
     <div class="output-group">
       <label for="recoveredText">復号結果</label>
-      <textarea id="recoveredText" rows="2" readonly></textarea>
+      <textarea id="recoveredText" rows="2" maxlength="2000" spellcheck="false" readonly></textarea>
       <button type="button" id="reverseOutput" aria-pressed="false" disabled>逆順にする</button>
       <button type="button" id="copyRecovered" disabled>コピー</button>
     </div>
@@ -126,55 +131,54 @@
   <footer>
     <div class="footer">
       🔗 GitHubリポジトリはこちら（
-      <a href="https://github.com/ipusiron/grille-cipherlab" target="_blank">
+      <a href="https://github.com/ipusiron/grille-cipherlab" target="_blank" rel="noopener noreferrer">
         ipusiron/grille-cipherlab
       </a>）
     </div>
   </footer>
 
   <!-- ヘルプモーダル -->
-  <div id="helpModal" class="modal">
+  <dialog id="helpModal" class="modal" aria-labelledby="helpTitle">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>📖 Grille CipherLab ヘルプ</h2>
-        <button id="helpModalClose" class="modal-close">&times;</button>
+        <h2 id="helpTitle">📖 Grille CipherLab ヘルプ</h2>
+        <button type="button" id="helpModalClose" class="modal-close" aria-label="閉じる">&times;</button>
       </div>
       <div class="modal-body">
         <section>
           <h3>🌀 回転グリル暗号とは</h3>
-          <p>回転グリル暗号は、穴の開いたカード（グリル）を使って文字を配置し、カードを回転させながら暗号化・復号化を行う古典暗号です。</p>
-          <p>本ツールでは、3×3のベースマトリクスから6×6のグリルを自動生成し、4回の回転（0°、90°、180°、270°）で暗号化・復号化を行います。</p>
+          <p>回転グリル暗号は、穴の開いた型紙を使って文字を配置し、型紙を回転させながら暗号化・復号を行う古典暗号です。</p>
+          <p>本ツールでは、9個の穴を持つ6×6の型紙を4回転させ、36マスを1回ずつ使います。</p>
         </section>
 
         <section>
           <h3>📝 使い方</h3>
           <h4>1. グリル作成</h4>
           <ul>
-            <li>3×3のマトリクスに1〜4の数字を入力</li>
-            <li>各数字は回転時に穴となる位置を示します</li>
-            <li>「→ グリル生成」ボタンでグリルを作成</li>
+            <li>3×3の数字、6×6の穴あけ盤、9桁の鍵、穴のパターンの4通りで指定できます</li>
+            <li>時計回りと反時計回りを選べます</li>
+            <li>書籍、サンドルフ、短い文の見本を読み込めます</li>
           </ul>
 
           <h4>2. 暗号化</h4>
           <ul>
-            <li>平文を入力（最大36文字）</li>
-            <li>「暗号化開始」ボタンで開始</li>
-            <li>「▶進む」ボタンで各回転ステップを実行</li>
-            <li>4回転で全ての文字が配置されます</li>
+            <li>平文は英字360文字まで入力でき、36文字ごとに次の紙へ進みます</li>
+            <li>足りないマスはXまたはランダムな英字で埋めます</li>
+            <li>「最初へ」「戻る」「進む」「最後まで」で状態を見られます</li>
           </ul>
 
-          <h4>3. 復号化</h4>
+          <h4>3. 復号</h4>
           <ul>
             <li>暗号文を入力</li>
             <li>「復号開始」ボタンで開始</li>
-            <li>「▶進む」ボタンで各回転ステップを実行</li>
-            <li>グリルの穴から文字を読み取って平文を復元</li>
+            <li>暗号化と同じ4つのボタンで読み取りを進めます</li>
+            <li>サンドルフの見本は「逆順にする」で原文の順序に戻せます</li>
           </ul>
         </section>
 
         <section>
-          <h3>⌨️ キーボードショートカット</h3>
-          <table class="help-table">
+          <h3 id="help-shortcuts" tabindex="-1">⌨️ キーボードショートカット</h3>
+          <div class="help-table-wrap"><table class="help-table">
             <tr>
               <th>キー</th>
               <th>機能</th>
@@ -183,29 +187,34 @@
             <tr>
               <td><kbd>Enter</kbd></td>
               <td>開始ボタン</td>
-              <td>全モード</td>
+              <td>暗号化・復号</td>
             </tr>
             <tr>
               <td><kbd>Space</kbd></td>
               <td>進むボタン</td>
-              <td>暗号化・復号化</td>
+              <td>暗号化・復号</td>
+            </tr>
+            <tr>
+              <td><kbd>←</kbd>／<kbd>→</kbd></td>
+              <td>戻る／進む</td>
+              <td>暗号化・復号</td>
             </tr>
             <tr>
               <td><kbd>Esc</kbd></td>
-              <td>リセット</td>
-              <td>全モード</td>
+              <td>最初へ</td>
+              <td>暗号化・復号</td>
             </tr>
             <tr>
               <td><kbd>Ctrl+C</kbd></td>
               <td>暗号文コピー</td>
               <td>暗号化完了時</td>
             </tr>
-          </table>
+          </table></div>
         </section>
 
         <section>
           <h3>🎨 テーマ設定</h3>
-          <p>画面右上のボタンでテーマを切り替えられます：</p>
+          <p>画面右上のボタンでテーマを切り替えられます。</p>
           <ul>
             <li>☀️ ライトモード</li>
             <li>🌙 ダークモード</li>
@@ -217,19 +226,19 @@
           <h3>💡 ヒント</h3>
           <ul>
             <li>グリルの穴の配置が暗号の鍵となります</li>
-            <li>同じグリルがないと復号できません</li>
-            <li>平文は英字のみ対応（空白・記号は自動除去）</li>
+            <li>同じ鍵と回す向きがないと復号できません</li>
+            <li>全角やアクセントつきの英字は半角へ正規化します</li>
             <li>進捗バーで現在の状態を確認できます</li>
           </ul>
         </section>
 
         <section>
           <h3>🔗 詳細情報</h3>
-          <p>より詳しい説明や技術情報は、<a href="https://github.com/ipusiron/grille-cipherlab" target="_blank">GitHubリポジトリ</a>をご覧ください。</p>
+          <p>より詳しい説明や技術情報は、<a href="https://github.com/ipusiron/grille-cipherlab" target="_blank" rel="noopener noreferrer">GitHubリポジトリ</a>をご覧ください。</p>
         </section>
       </div>
     </div>
-  </div>
+  </dialog>
 
   <script src="js/config.js"></script>
   <script src="js/grille-cipher-logic.js"></script>
