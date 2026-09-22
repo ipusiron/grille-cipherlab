@@ -100,29 +100,26 @@
   <section id="decrypt" class="tab-content">
     <h2>③ 復号モード</h2>
     <p>暗号文を入力し、グリルを重ねて平文を復元します。</p>
-    <label for="cipherInput">暗号文入力：</label>
-    <textarea id="cipherInput" rows="2"></textarea>
-    <button id="startDecryption">復号開始</button>
-    <button id="nextDecryption" disabled>▶進む</button>
-    <div id="decryptionRotationLabel">回転：0度</div>
-    
-    <!-- 詳細進捗表示 -->
-    <div id="decryptionProgress" class="progress-container" style="display: none;">
-      <div class="progress-info">
-        <span id="decryptionStepInfo">ステップ 1/4</span>
-        <span id="decryptionCharInfo">0 文字復号済み</span>
-      </div>
-      <div class="progress-bar">
-        <div id="decryptionProgressBar" class="progress-fill"></div>
-      </div>
-      <div id="decryptionNextInfo" class="next-info">次：9文字を読み取ります</div>
+    <label for="cipherInput">暗号文入力</label>
+    <textarea id="cipherInput" rows="3" maxlength="2000" spellcheck="false"></textarea>
+    <button type="button" id="startDecryption">復号開始</button>
+    <div class="step-controls">
+      <button type="button" id="decFirst" disabled>最初へ</button>
+      <button type="button" id="decPrev" disabled>戻る</button>
+      <button type="button" id="nextDecryption" disabled>▶進む</button>
+      <button type="button" id="decLast" disabled>最後まで</button>
     </div>
-    
+    <p id="decryptionStatus" class="run-status" role="status"></p>
+    <div class="progress-bar"><div id="decryptionProgressBar" class="progress-fill"></div></div>
     <div id="decrypt-notifications" class="notification-container"></div>
-    <div id="decryptionGrid"></div>
-    <div style="margin-top: 1em;">
-      <label for="recoveredText">復号結果：</label>
+    <div id="decryptionBoard" class="board-wrap" hidden></div>
+    <label><input type="checkbox" id="decHideCard" /> 型紙を外して紙だけを見る</label>
+    <p class="board-legend">▲＝型紙の上辺／枠のあるマス＝穴／黄色＝いま読んだ文字</p>
+    <div class="output-group">
+      <label for="recoveredText">復号結果</label>
       <textarea id="recoveredText" rows="2" readonly></textarea>
+      <button type="button" id="reverseOutput" aria-pressed="false" disabled>逆順にする</button>
+      <button type="button" id="copyRecovered" disabled>コピー</button>
     </div>
   </section>
 

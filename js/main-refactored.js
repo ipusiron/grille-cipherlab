@@ -72,7 +72,6 @@ function bindGrilleCreator() {
     const name = t(sample.nameKey);
     const note = sample.noteKey ? ` ${t(sample.noteKey)}` : '';
     uiController.showGrilleMessage(t('sample.loaded', { name }) + note, 'success');
-    checkCipherTextAndUpdateButtons();
   });
 
   const randomButton = document.getElementById('randomKey');
@@ -97,32 +96,6 @@ function selectedFiller() {
     : GrilleLogic.fixedFiller('X');
 }
 
-// 暗号文入力チェック
-function checkCipherTextAndUpdateButtons() {
-  const inputField = document.getElementById(CONFIG.DOM_IDS.CIPHER_INPUT);
-  const startButton = document.getElementById(CONFIG.DOM_IDS.START_DECRYPTION);
-  
-  if (inputField.value.trim() === "") {
-    startButton.disabled = true;
-  } else {
-    // 文字種検証
-    const charValidation = ValidationHelper.validateTextCharacters(inputField.value);
-    if (charValidation.errors.length > 0) {
-      startButton.disabled = true;
-      NotificationSystem.error(charValidation.errors[0], CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
-    } else {
-      startButton.disabled = false;
-      // 入力時に既存のエラーをクリア
-      NotificationSystem.clear(CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
-      
-      // 警告があれば表示（ボタンは有効のまま）
-      if (charValidation.warnings.length > 0) {
-        NotificationSystem.warning(charValidation.warnings[0], CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
-      }
-    }
-  }
-}
-
 // コピー機能
 async function copyCipherText() {
   const text = document.getElementById(CONFIG.DOM_IDS.CIPHER_TEXT).value;
@@ -133,6 +106,18 @@ async function copyCipherText() {
     NotificationSystem.success(t('copy.done'), CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS, 0);
   } catch (_error) {
     NotificationSystem.error(t('copy.failed'), CONFIG.DOM_IDS.ENCRYPT_NOTIFICATIONS, 0);
+  }
+}
+
+async function copyRecoveredText() {
+  const text = document.getElementById('recoveredText').value;
+  if (!text) return;
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('clipboard');
+    await navigator.clipboard.writeText(text);
+    NotificationSystem.success(t('copy.done'), CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS, 0);
+  } catch (_error) {
+    NotificationSystem.error(t('copy.failed'), CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS, 0);
   }
 }
 
@@ -170,10 +155,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 暗号文入力時のチェック
   document.getElementById(CONFIG.DOM_IDS.CIPHER_INPUT).addEventListener("input", () => {
-    checkCipherTextAndUpdateButtons();
-    document.getElementById(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
+    uiController.clearDecryption(true);
   });
-  checkCipherTextAndUpdateButtons();
 
   // 暗号化モードのイベント
   document.getElementById(CONFIG.DOM_IDS.START_ENCRYPTION).addEventListener("click", () => {
@@ -201,6 +184,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById(CONFIG.DOM_IDS.NEXT_DECRYPTION).addEventListener("click", () => {
     uiController.nextDecryptionStep();
   });
+  document.getElementById('decFirst').addEventListener('click', () => uiController.setDecryptionDone(0));
+  document.getElementById('decPrev').addEventListener('click', () => {
+    uiController.setDecryptionDone(uiController.state.decryption.done - 1);
+  });
+  document.getElementById('decLast').addEventListener('click', () => {
+    const result = uiController.state.decryption.result;
+    if (result) uiController.setDecryptionDone(result.stepCount);
+  });
+  document.getElementById('decHideCard').addEventListener('change', () => uiController.renderDecryption());
+  document.getElementById('reverseOutput').addEventListener('click', () => uiController.toggleDecryptionReverse());
+  document.getElementById('copyRecovered').addEventListener('click', copyRecoveredText);
 
   // その他のイベント
   document.getElementById(CONFIG.DOM_IDS.COPY_CIPHER).addEventListener("click", copyCipherText);
@@ -267,8 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (target === "encrypt") {
       } else if (target === "decrypt") {
-        document.getElementById(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
-        checkCipherTextAndUpdateButtons();
       }
     });
   });

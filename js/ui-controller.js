@@ -16,6 +16,7 @@ class UIController {
       decryptionGrid: this.createEmptyGrid(),
       cipherChars: [],
       recoveredText: '',
+      decryption: { result: null, done: 0, reversed: false },
       
       // 共通
       key: GrilleLogic.DEFAULT_KEY,
@@ -145,13 +146,39 @@ class UIController {
 
   clearRuns(showMessage = false) {
     const wasRunning = this.clearEncryption(showMessage);
+    this.clearDecryption(showMessage);
+    return wasRunning;
+  }
+
+  clearDecryption(showMessage = false) {
+    const wasRunning = this.state.decryption.result !== null;
+    this.state.decryption = { result: null, done: 0, reversed: false };
     this.state.decryptionGrid = this.createEmptyGrid();
     this.state.cipherChars = [];
     this.state.decryptionStep = 0;
     this.state.recoveredText = '';
-    this.getElement('decryptionGrid').replaceChildren();
+    const legacyGrid = this.getElement('decryptionGrid');
+    if (legacyGrid) legacyGrid.replaceChildren();
     this.getElement('recoveredText').value = '';
     this.getElement('nextDecryption').disabled = true;
+    const board = this.getElement('decryptionBoard');
+    if (board) {
+      board.hidden = true;
+      board.replaceChildren();
+    }
+    const status = this.getElement('decryptionStatus');
+    if (status) status.textContent = '';
+    for (const id of ['decFirst', 'decPrev', 'decLast', 'reverseOutput', 'copyRecovered']) {
+      const button = this.getElement(id);
+      if (button) button.disabled = true;
+    }
+    const reverseButton = this.getElement('reverseOutput');
+    if (reverseButton) reverseButton.setAttribute('aria-pressed', 'false');
+    const progress = this.getElement('decryptionProgressBar');
+    if (progress) progress.style.width = '0%';
+    if (wasRunning && showMessage) {
+      NotificationSystem.info(GrilleMessages.t('run.cleared'), 'decrypt-notifications', 0);
+    }
     return wasRunning;
   }
 
@@ -383,7 +410,7 @@ class UIController {
     container.hidden = false;
 
     const letters = view.fresh.map(([row, col]) => view.paper[row][col]).join(' ');
-    const key = view.done ? 'encrypt.board' : 'encrypt.board.start';
+    const key = view.done ? `${mode}.board` : `${mode}.board.start`;
     const params = view.done ? {
       block: view.blockIndex + 1,
       blocks: view.blockCount,
@@ -425,125 +452,73 @@ class UIController {
     this.getElement('copyCipher').disabled = !view.finished;
   }
 
-  // 復号化の開始
+  // 復号の開始
   startDecryption() {
-    const cipherInput = this.getElement("cipherInput").value;
-    
-    // 入力検証
-    const textErrors = ValidationHelper.validateNotEmpty(cipherInput, "暗号文");
-    if (textErrors.length > 0) {
-      NotificationSystem.error(textErrors[0], "decrypt-notifications");
-      return;
-    }
-    
-    // 文字種検証
-    const charValidation = ValidationHelper.validateTextCharacters(cipherInput);
-    if (charValidation.errors.length > 0) {
-      NotificationSystem.error(charValidation.errors[0], "decrypt-notifications");
-      return;
-    }
-    
-    if (!this.state.currentGrille) {
-      NotificationSystem.error(ErrorMessages.GRILLE_NOT_GENERATED, "decrypt-notifications");
-      return;
-    }
-    
-    // エラーなしの場合、既存の通知をクリア
-    NotificationSystem.clear("decrypt-notifications");
-    
-    // 警告メッセージがあれば表示（処理は継続）
-    if (charValidation.warnings.length > 0) {
-      NotificationSystem.warning(charValidation.warnings[0], "decrypt-notifications");
-    }
-    
-    const input = this.cipher.normalizeText(cipherInput);
-    this.state.cipherChars = input.split('');
-    this.state.decryptionGrid = this.createEmptyGrid();
-    this.state.decryptionStep = 0;
-    this.state.recoveredText = "";
-    
-    // 暗号文をグリッドに配置
-    let index = 0;
-    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
-      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
-        this.state.decryptionGrid[r][c] = this.state.cipherChars[index++] || "";
-      }
-    }
-    
-    this.drawDecryptionGrid();
-    this.getElement(CONFIG.DOM_IDS.RECOVERED_TEXT).value = "";
-    this.updateRotationLabel(CONFIG.DOM_IDS.DECRYPTION_ROTATION_LABEL, 0);
-    this.getElement(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = false;
-    
-    // 進捗表示の初期化
-    const nextChars = this.getNextStepCharCount(0);
-    this.updateDecryptionProgress(0, 0, nextChars);
-  }
-
-  // 次の復号化ステップ
-  nextDecryptionStep() {
-    const result = this.cipher.decryptStep(
-      this.state.decryptionGrid,
-      this.state.currentGrille,
-      this.state.decryptionStep
-    );
-    
-    this.state.recoveredText += result.chars;
-    
-    // アニメーション
-    result.holes.forEach(([r, c]) => {
-      this.animateCell(r, c, "decryptionGrid");
+    const result = GrilleLogic.decrypt(this.getElement('cipherInput').value, this.state.key, {
+      direction: this.state.direction
     });
-    
-    this.drawDecryptionGrid(result.holes);
-    this.getElement(CONFIG.DOM_IDS.RECOVERED_TEXT).value = this.state.recoveredText;
-    
-    this.state.decryptionStep++;
-    
-    // 進捗表示を更新
-    const nextChars = this.state.decryptionStep < CONFIG.ROTATION_COUNT ? this.getNextStepCharCount(this.state.decryptionStep) : 0;
-    this.updateDecryptionProgress(this.state.decryptionStep, this.state.recoveredText.length, nextChars);
-    
-    if (this.state.decryptionStep >= CONFIG.ROTATION_COUNT) {
-      this.getElement(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
-      NotificationSystem.success(ErrorMessages.DECRYPTION_COMPLETE, CONFIG.DOM_IDS.DECRYPT_NOTIFICATIONS);
-    } else {
-      this.applyRotationAnimation(CONFIG.DOM_IDS.DECRYPTION_GRID, () => {
-        this.updateRotationLabel(CONFIG.DOM_IDS.DECRYPTION_ROTATION_LABEL, this.state.decryptionStep);
-        this.drawDecryptionGrid();
-      });
+    NotificationSystem.clear('decrypt-notifications');
+    if (!result.ok) {
+      NotificationSystem.error(GrilleMessages.t(result.errorKey, result.params), 'decrypt-notifications', 0);
+      return false;
     }
+    this.state.decryption = { result, done: 0, reversed: false };
+    if (result.removed) {
+      NotificationSystem.info(GrilleMessages.t('input.removed', { count: result.removed }), 'decrypt-notifications', 0);
+    }
+    this.renderDecryption();
+    return true;
   }
 
-  // 復号化グリッドの描画
-  drawDecryptionGrid(highlight = []) {
-    const container = this.getElement("decryptionGrid");
-    container.innerHTML = "";
-    this.setGridStyles(container);
-    
-    const holes = this.cipher.getGrilleHoles(
-      this.state.currentGrille,
-      this.state.decryptionStep
-    );
-    const holeSet = new Set(holes.map(([r, c]) => `${r},${c}`));
-    const highlightSet = new Set(highlight.map(([r, c]) => `${r},${c}`));
-    
-    for (let r = 0; r < CONFIG.GRILLE_SIZE; r++) {
-      for (let c = 0; c < CONFIG.GRILLE_SIZE; c++) {
-        const isHole = holeSet.has(`${r},${c}`);
-        const isHighlight = highlightSet.has(`${r},${c}`);
-        const content = this.state.decryptionGrid[r][c];
-        const classes = [];
-        
-        if (isHole) classes.push("cell-hole");
-        if (!isHole && content) classes.push("cell-faded");
-        if (isHighlight) classes.push("cell-rotated");
-        
-        const cell = this.createCell(r, c, content, classes);
-        cell.id = `dec-${r}-${c}`;
-        container.appendChild(cell);
-      }
+  setDecryptionDone(done) {
+    const result = this.state.decryption.result;
+    if (!result) return;
+    this.state.decryption.done = Math.max(0, Math.min(result.stepCount, done));
+    this.renderDecryption();
+  }
+
+  // 次の復号ステップ
+  nextDecryptionStep() {
+    this.setDecryptionDone(this.state.decryption.done + 1);
+  }
+
+  toggleDecryptionReverse() {
+    if (!this.state.decryption.result) return;
+    this.state.decryption.reversed = !this.state.decryption.reversed;
+    this.renderDecryption();
+  }
+
+  renderDecryption() {
+    const { result, done, reversed } = this.state.decryption;
+    if (!result) return;
+    const view = GrilleLogic.decryptionView(result, done);
+    this.renderBoard('decryptionBoard', view, 'decrypt');
+    const totalLetters = result.blocks.length * GrilleLogic.BLOCK;
+    let statusKey = 'decrypt.status';
+    let params = {
+      block: view.blockIndex + 1,
+      blocks: view.blockCount,
+      turn: view.rotation + 1,
+      angle: view.angle,
+      read: view.read,
+      total: totalLetters
+    };
+    if (!view.done) {
+      statusKey = 'decrypt.status.start';
+      params = { blocks: view.blockCount, total: totalLetters };
+    } else if (view.finished) {
+      statusKey = 'decrypt.status.done';
     }
+    this.getElement('decryptionStatus').textContent = GrilleMessages.t(statusKey, params);
+    this.getElement('decryptionProgressBar').style.width = `${view.total ? view.done / view.total * 100 : 0}%`;
+    this.getElement('recoveredText').value = reversed ? GrilleLogic.reverseLetters(view.output) : view.output;
+    this.getElement('decFirst').disabled = view.done === 0;
+    this.getElement('decPrev').disabled = view.done === 0;
+    this.getElement('nextDecryption').disabled = view.finished;
+    this.getElement('decLast').disabled = view.finished;
+    this.getElement('reverseOutput').disabled = !view.output;
+    this.getElement('reverseOutput').setAttribute('aria-pressed', String(reversed));
+    this.getElement('copyRecovered').disabled = !view.finished;
   }
 
   // セルのアニメーション
@@ -648,22 +623,8 @@ class UIController {
   }
 
   initDecryptionMode() {
-    this.state.cipherChars = [];
-    this.state.decryptionStep = 0;
-    this.state.decryptionGrid = this.createEmptyGrid();
-    this.state.recoveredText = "";
-    
-    this.getElement(CONFIG.DOM_IDS.RECOVERED_TEXT).value = "";
-    this.getElement(CONFIG.DOM_IDS.CIPHER_INPUT).value = "";
-    this.getElement(CONFIG.DOM_IDS.NEXT_DECRYPTION).disabled = true;
-    this.getElement(CONFIG.DOM_IDS.START_DECRYPTION).disabled = true; // 初期状態では無効
-    this.updateRotationLabel(CONFIG.DOM_IDS.DECRYPTION_ROTATION_LABEL, 0);
-    
-    const container = this.getElement(CONFIG.DOM_IDS.DECRYPTION_GRID);
-    container.innerHTML = "";
-    container.style.display = "none";
-    
-    // 進捗表示をリセット
-    this.resetProgress('decryption');
+    this.clearDecryption(false);
+    this.getElement(CONFIG.DOM_IDS.CIPHER_INPUT).value = '';
+    this.getElement(CONFIG.DOM_IDS.START_DECRYPTION).disabled = false;
   }
 }
