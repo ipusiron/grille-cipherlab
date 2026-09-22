@@ -1,7 +1,7 @@
 // 画面に表示する文言の辞書
 
 const GrilleMessages = (() => {
-  const ja = Object.freeze({
+  const dynamicJa = {
     'key.length': '鍵は1〜4の数字を9個並べます（いまは{length}個）',
     'key.range': '鍵に使える数字は1〜4だけです',
     'pattern.size': '穴のパターンは6行×6文字で書きます（いまは{rows}行）',
@@ -51,11 +51,239 @@ const GrilleMessages = (() => {
     'sample.book': '書籍の例（36文字）',
     'sample.sandorf': 'ヴェルヌ『Mathias Sandorf』（108文字・3ブロック）',
     'sample.short': '短い文（埋め草の例）',
-    'sample.sandorf.note': '小説では、文を逆順にしてから暗号化しています。復号したら「逆順にする」を押すと読めます'
+    'sample.sandorf.note': '小説では、文を逆順にしてから暗号化しています。復号したら「逆順にする」を押すと読めます',
+    'solve.loaded': '暗号文を作業台に置きました（{blocks}ブロック）',
+    'solve.block': 'ブロック {block}/{blocks}',
+    'solve.cell': '{row}行{col}列、文字{char}',
+    'solve.cell.hole': '{row}行{col}列、文字{char}、現在の穴',
+    'solve.turn': '回{turn}: {letters}',
+    'solve.combined': '読み出し: {letters}',
+    'solve.score': 'トライグラム得点: {score}（1文字あたり {perLetter}）',
+    'solve.rotated': '型紙を1回転しました。鍵は{key}です',
+    'solve.search.progress': '経過: {done}/{total}鍵・{seconds}秒',
+    'solve.search.done': '総当たりが完了しました（{classes}クラス・{seconds}秒）',
+    'solve.search.partial': '総当たりを中断しました。処理済みの範囲から結果を表示します',
+    'solve.search.truncated': '先頭3ブロック（108文字）だけを採点しました',
+    'solve.results.caption': '総当たりの上位結果',
+    'solve.results.rank': '順位',
+    'solve.results.canonical': '代表／最良の鍵',
+    'solve.results.direction': '向き',
+    'solve.results.score': '得点',
+    'solve.results.reverse': '逆順',
+    'solve.results.plain': '平文（先頭36字）',
+    'solve.results.action': '操作',
+    'solve.results.members': '同じ型紙の4つの鍵: {members}',
+    'solve.results.best': '最高得点の鍵: {key}',
+    'solve.results.reversed': '逆順',
+    'solve.results.forward': '順方向',
+    'solve.results.use': 'この鍵を使う',
+    'solve.results.workbench': '作業台で見る',
+    'solve.results.difference': '1位と2位の差: {difference}',
+    'solve.direction.cw': '時計回り',
+    'solve.direction.ccw': '反時計回り',
+    'message.separator': '／',
+    'print.title': '鍵 {key}・{direction}',
+    'share.direction': 'URLの向きはcwまたはccwで指定してください',
+    'share.loaded': 'URLの鍵 {key}（{direction}）を読み込みました',
+    'share.invalid': 'URLの鍵が読めません',
+    'share.copied': '共有URLをコピーしました',
+    'lang.toEnglish': 'English',
+    'lang.toJapanese': '日本語'
+  };
+
+  const dynamicEn = {
+    'key.length': 'Enter nine digits from 1 to 4 (currently {length})',
+    'key.range': 'A key may contain only the digits 1 through 4',
+    'pattern.size': 'Write the hole pattern as 6 rows of 6 characters (currently {rows} rows)',
+    'pattern.char': 'The pattern contains an invalid character ({char}). Use X for a hole and . for a closed cell',
+    'pattern.orbit': 'This is not a turning grille. {count} orbit(s) have overlapping or missing holes',
+    'input.noLetters': 'Enter at least one letter',
+    'input.tooLong': 'The input is too long ({length} letters). The maximum is {max}',
+    'input.removed': 'Removed {count} non-letter character(s)',
+    'cipher.length': 'Ciphertext length must be a multiple of 36 (currently {length}; {missing} more needed)',
+    'encrypt.padded': 'Added {count} filler character(s) to complete a 36-character block',
+    'run.cleared': 'The input changed, so the previous run was cleared',
+    'copy.done': 'Copied',
+    'copy.failed': 'Could not copy. Select the text and copy it manually',
+    'key.loaded': 'Loaded the key',
+    'key.random': 'Created a random grille',
+    'key.reset': 'Restored the default grille',
+    'pattern.loaded': 'Loaded the hole pattern',
+    'sample.loaded': 'Loaded “{name}”. The Encrypt and Decrypt inputs were also filled',
+    'matrix.label': '3 by 3 row {row}, column {col}',
+    'punch.label': 'Row {row}, column {col}',
+    'punch.hole': 'Row {row}, column {col} (hole)',
+    'encrypt.status': 'Block {block}/{blocks}, turn {turn} ({angle}°), {placed}/{total} letters',
+    'encrypt.status.start': 'Block 1/{blocks}, before start (0°), 0/{total} letters',
+    'encrypt.status.done': 'Block {block}/{blocks}, complete ({angle}°), {placed}/{total} letters',
+    'encrypt.board': 'Block {block}/{blocks}, turn {turn}, grille at {angle}°. Letters just written: {letters}',
+    'encrypt.board.start': 'Block 1/{blocks}, before start. The grille is placed over a blank sheet',
+    'decrypt.status': 'Block {block}/{blocks}, turn {turn} ({angle}°), {read}/{total} letters',
+    'decrypt.status.start': 'Block 1/{blocks}, before start (0°), 0/{total} letters',
+    'decrypt.status.done': 'Block {block}/{blocks}, complete ({angle}°), {read}/{total} letters',
+    'decrypt.board': 'Block {block}/{blocks}, turn {turn}, grille at {angle}°. Letters just read: {letters}',
+    'decrypt.board.start': 'Block 1/{blocks}, before start. The grille is placed over the ciphertext',
+    'shortcut.encrypt.start': 'Enter: Start encryption',
+    'shortcut.decrypt.start': 'Enter: Start decryption',
+    'shortcut.next': 'Next',
+    'shortcut.previous': 'Previous',
+    'shortcut.first': 'First',
+    'shortcut.copy': 'Ctrl+C: Copy ciphertext',
+    'theme.light.title': 'Light mode (click for dark mode)',
+    'theme.dark.title': 'Dark mode (click for system mode)',
+    'theme.auto.title': 'System mode (click for light mode)',
+    'theme.light.label': 'Change theme (currently light)',
+    'theme.dark.label': 'Change theme (currently dark)',
+    'theme.auto.label': 'Change theme (currently follows the system)',
+    'theme.light.changed': 'Switched to light mode',
+    'theme.dark.changed': 'Switched to dark mode',
+    'theme.auto.changed': 'Switched to system mode',
+    'sample.book': 'Book example (36 letters)',
+    'sample.sandorf': 'Verne’s Mathias Sandorf (108 letters, 3 blocks)',
+    'sample.short': 'Short text (filler example)',
+    'sample.sandorf.note': 'The novel encrypts the text in reverse. Select Reverse after decryption to read it',
+    'solve.loaded': 'Placed the ciphertext on the workbench ({blocks} blocks)',
+    'solve.block': 'Block {block}/{blocks}',
+    'solve.cell': 'Row {row}, column {col}, letter {char}',
+    'solve.cell.hole': 'Row {row}, column {col}, letter {char}, current hole',
+    'solve.turn': 'Turn {turn}: {letters}',
+    'solve.combined': 'Reading: {letters}',
+    'solve.score': 'Trigram score: {score} ({perLetter} per letter)',
+    'solve.rotated': 'Rotated the grille once. The key is {key}',
+    'solve.search.progress': 'Progress: {done}/{total} keys, {seconds} seconds',
+    'solve.search.done': 'Brute force complete ({classes} classes, {seconds} seconds)',
+    'solve.search.partial': 'Brute force stopped. Showing results from the processed range',
+    'solve.search.truncated': 'Scored only the first 3 blocks (108 letters)',
+    'solve.results.caption': 'Top brute-force results',
+    'solve.results.rank': 'Rank',
+    'solve.results.canonical': 'Canonical / best key',
+    'solve.results.direction': 'Direction',
+    'solve.results.score': 'Score',
+    'solve.results.reverse': 'Reverse',
+    'solve.results.plain': 'Plaintext (first 36 letters)',
+    'solve.results.action': 'Action',
+    'solve.results.members': 'Four keys for this grille: {members}',
+    'solve.results.best': 'Best-scoring key: {key}',
+    'solve.results.reversed': 'Reversed',
+    'solve.results.forward': 'Forward',
+    'solve.results.use': 'Use this key',
+    'solve.results.workbench': 'Open in workbench',
+    'solve.results.difference': 'Difference between first and second: {difference}',
+    'solve.direction.cw': 'Clockwise',
+    'solve.direction.ccw': 'Counterclockwise',
+    'message.separator': ' / ',
+    'print.title': 'Key {key} — {direction}',
+    'share.direction': 'The URL direction must be cw or ccw',
+    'share.loaded': 'Loaded key {key} ({direction}) from the URL',
+    'share.invalid': 'Could not read the key from the URL',
+    'share.copied': 'Copied the sharing URL',
+    'lang.toEnglish': 'English',
+    'lang.toJapanese': 'Japanese'
+  };
+
+  const staticPairs = [
+    ['このツールはJavaScriptを有効にすると動きます。', 'Enable JavaScript to use this tool.'],
+    ['回転グリル暗号の仕組みを体験できるツール', 'Explore how a turning grille cipher works'],
+    ['⌨️ ショートカット', '⌨️ Shortcuts'], ['① グリル作成', '① Create grille'],
+    ['② 暗号化', '② Encrypt'], ['③ 復号', '③ Decrypt'], ['④ 解読', '④ Solve'],
+    ['① グリル作成モード', '① Create grille'],
+    ['穴は9個。4回転で36マスをちょうど1回ずつ覆います。鍵は4^9＝262,144通りです。',
+      'Nine holes cover all 36 cells exactly once over four turns. There are 4^9 = 262,144 keys.'],
+    ['3×3の数字', '3×3 digits'], ['6×6の穴あけ盤', '6×6 punch board'], ['9桁の鍵', 'Nine-digit key'],
+    ['鍵を読み込む', 'Load key'], ['ランダムなグリル', 'Random grille'], ['既定に戻す', 'Reset'],
+    ['型紙を印刷', 'Print grille'], ['共有URLをコピー', 'Copy sharing URL'], ['回す向き', 'Direction'],
+    ['時計回り（既定）', 'Clockwise (default)'], ['反時計回り', 'Counterclockwise'],
+    ['穴のパターンと見本', 'Hole pattern and examples'],
+    ['穴のパターン（Xが穴、.が穴でないマス）', 'Hole pattern (X is a hole; . is closed)'],
+    ['パターンを読み込む', 'Load pattern'], ['コピー', 'Copy'], ['見本', 'Example'], ['見本を読み込む', 'Load example'],
+    ['② 暗号化モード', '② Encrypt'], ['グリルを使って平文を暗号化します。', 'Encrypt plaintext with the grille.'],
+    ['平文入力', 'Plaintext'],
+    ['英字以外（空白・数字・記号）は取り除きます。全角の英字とアクセントつきの英字は、半角の英字に直します。36文字に足りないぶんは埋め草で埋めます。',
+      'Spaces, digits, and punctuation are removed. Full-width and accented letters are normalized. Filler completes each 36-letter block.'],
+    ['埋め草', 'Filler'], ['Xで埋める（既定）', 'Fill with X (default)'],
+    ['ランダムな英字で埋める', 'Fill with random letters'], ['暗号化開始', 'Start encryption'],
+    ['最初へ', 'First'], ['戻る', 'Previous'], ['▶進む', '▶ Next'], ['最後まで', 'Finish'],
+    ['型紙を外して紙だけを見る', 'Hide the grille and show only the paper'],
+    ['▲＝型紙の上辺／枠のあるマス＝穴／黄色＝いま書いた文字', '▲ = top / outlined cells = holes / yellow = newly written'],
+    ['暗号文', 'Ciphertext'], ['頻度分析（Day009）で見る', 'Open in Frequency Analyzer (Day009)'],
+    ['③ 復号モード', '③ Decrypt'], ['暗号文を入力し、グリルを重ねて平文を復元します。',
+      'Enter ciphertext and place the grille over it to recover the plaintext.'],
+    ['暗号文入力', 'Ciphertext'], ['復号開始', 'Start decryption'],
+    ['▲＝型紙の上辺／枠のあるマス＝穴／黄色＝いま読んだ文字', '▲ = top / outlined cells = holes / yellow = newly read'],
+    ['復号結果', 'Recovered text'], ['逆順にする', 'Reverse'],
+    ['④ 解読モード', '④ Solve'],
+    ['暗号文を作業台で読み、英語・フランス語のトライグラム統計を使って鍵を総当たりできます。',
+      'Read ciphertext on a workbench or brute-force keys with English and French trigram statistics.'],
+    ['解読する暗号文', 'Ciphertext to solve'], ['作業台に置く', 'Load workbench'],
+    ['表示するブロック', 'Displayed block'], ['型紙を1回転', 'Rotate grille once'],
+    ['読み出しを逆順にする', 'Reverse the reading'], ['鍵を総当たりする', 'Brute-force the key'],
+    ['採点する言語', 'Scoring language'], ['英語', 'English'], ['フランス語', 'French'],
+    ['調べる向き', 'Directions to test'], ['両方', 'Both'], ['時計回り', 'Clockwise'],
+    ['逆順も採点', 'Also score reversed text'], ['総当たり', 'Brute force'], ['中断', 'Cancel'],
+    ['統計: 英語はProject Gutenberg 10作品、フランス語は6作品から作成しています。',
+      'Statistics: 10 Project Gutenberg works for English and 6 for French.'],
+    ['🔗 GitHubリポジトリはこちら（', '🔗 GitHub repository ('],
+    ['📖 Grille CipherLab ヘルプ', '📖 Grille CipherLab Help'], ['🌀 回転グリル暗号とは', '🌀 What is a turning grille?'],
+    ['回転グリル暗号は、穴の開いた型紙を使って文字を配置し、型紙を回転させながら暗号化・復号を行う古典暗号です。',
+      'A turning grille is a classical cipher that places letters through holes while rotating a stencil.'],
+    ['本ツールでは、9個の穴を持つ6×6の型紙を4回転させ、36マスを1回ずつ使います。',
+      'This tool rotates a 6×6 grille with nine holes four times, using every cell once.'],
+    ['📝 使い方', '📝 How to use'], ['1. グリル作成', '1. Create a grille'],
+    ['3×3の数字、6×6の穴あけ盤、9桁の鍵、穴のパターンの4通りで指定できます',
+      'Specify a grille with 3×3 digits, the 6×6 punch board, a nine-digit key, or a hole pattern'],
+    ['時計回りと反時計回りを選べます', 'Choose clockwise or counterclockwise rotation'],
+    ['書籍、サンドルフ、短い文の見本を読み込めます', 'Load the book, Mathias Sandorf, or short-text example'],
+    ['2. 暗号化', '2. Encrypt'], ['平文は英字360文字まで入力でき、36文字ごとに次の紙へ進みます',
+      'Enter up to 360 letters; each 36 letters use a new sheet'],
+    ['足りないマスはXまたはランダムな英字で埋めます', 'Fill unused cells with X or random letters'],
+    ['「最初へ」「戻る」「進む」「最後まで」で状態を見られます', 'Use First, Previous, Next, and Finish to inspect each state'],
+    ['3. 復号', '3. Decrypt'], ['暗号文を入力', 'Enter ciphertext'], ['「復号開始」ボタンで開始', 'Select Start decryption'],
+    ['暗号化と同じ4つのボタンで読み取りを進めます', 'Step through reading with the same four controls'],
+    ['サンドルフの見本は「逆順にする」で原文の順序に戻せます', 'Use Reverse to restore the Mathias Sandorf text order'],
+    ['4. 解読', '4. Solve'],
+    ['暗号文を作業台に置くと、現在の鍵による4回転ぶんの読み出しを確認できます',
+      'Load ciphertext into the workbench to inspect four turns with the current key'],
+    ['穴を動かすとグリル作成タブと同じ鍵が更新されます', 'Moving a hole updates the same key used by Create grille'],
+    ['総当たりでは、英語またはフランス語の統計で上位10クラスを表示します',
+      'Brute force shows the top ten classes using English or French statistics'],
+    ['サンドルフの練習では、逆順を有効にして穴を動かします', 'For Mathias Sandorf, enable reverse scoring while exploring'],
+    ['印刷・共有・頻度分析', 'Print, share, and analyze frequency'],
+    ['型紙を印刷し、黒い9マスをカッターで切り抜くと紙でも試せます', 'Print the grille and cut out its nine black cells to try it on paper'],
+    ['共有URLには鍵と向きだけを入れ、平文・暗号文は入れません', 'A sharing URL contains only the key and direction, never plaintext or ciphertext'],
+    ['転置暗号では文字の頻度が変わらないため、Day009の頻度分析へ暗号文を渡して確かめられます',
+      'A transposition cipher preserves letter frequencies; send ciphertext to Day009 to verify this'],
+    ['⌨️ キーボードショートカット', '⌨️ Keyboard shortcuts'], ['キー', 'Key'], ['機能', 'Action'],
+    ['使用場面', 'Context'], ['開始ボタン', 'Start button'], ['暗号化・復号', 'Encrypt / Decrypt'],
+    ['進むボタン', 'Next button'], ['戻る／進む', 'Previous / Next'], ['暗号文コピー', 'Copy ciphertext'],
+    ['暗号化完了時', 'After encryption'], ['🎨 テーマ設定', '🎨 Theme'],
+    ['画面右上のボタンでテーマを切り替えられます。', 'Use the button at the upper right to change the theme.'],
+    ['☀️ ライトモード', '☀️ Light mode'], ['🌙 ダークモード', '🌙 Dark mode'], ['🔄 システム連動', '🔄 Follow system'],
+    ['💡 ヒント', '💡 Tips'], ['グリルの穴の配置が暗号の鍵となります', 'The hole arrangement is the cipher key'],
+    ['同じ鍵と回す向きがないと復号できません', 'Decryption requires the same key and direction'],
+    ['全角やアクセントつきの英字は半角へ正規化します', 'Full-width and accented letters are normalized'],
+    ['進捗バーで現在の状態を確認できます', 'Progress bars show the current state'],
+    ['🔗 詳細情報', '🔗 More information'],
+    ['より詳しい説明や技術情報は、', 'For more documentation and technical details, visit the '],
+    ['GitHubリポジトリ', 'GitHub repository'], ['をご覧ください。', '.'], ['型紙', 'Grille'], ['用紙', 'Paper'],
+    ['ヘルプ', 'Help'], ['テーマ切り替え', 'Change theme'], ['テーマの切り替え', 'Change theme'],
+    ['操作モード', 'Operating mode'], ['解読用の6×6作業台', '6×6 solving workbench'], ['閉じる', 'Close'],
+    ['印刷用の回転グリル型紙と用紙', 'Printable turning grille and paper']
+  ];
+
+  const staticJa = Object.fromEntries(staticPairs.map((pair, index) => [`static.${index}`, pair[0]]));
+  const staticEn = Object.fromEntries(staticPairs.map((pair, index) => [`static.${index}`, pair[1]]));
+  const ja = Object.freeze({ ...dynamicJa, ...staticJa, 'app.title': 'Grille CipherLab' });
+  const en = Object.freeze({ ...dynamicEn, ...staticEn, 'app.title': 'Grille CipherLab' });
+  const dictionaries = Object.freeze({ ja, en });
+  const staticKeyByText = new Map();
+  staticPairs.forEach((_pair, index) => {
+    staticKeyByText.set(ja[`static.${index}`], `static.${index}`);
+    staticKeyByText.set(en[`static.${index}`], `static.${index}`);
   });
+  let currentLang = 'ja';
 
   function format(lang, key, params = {}) {
-    const dictionary = lang === 'ja' ? ja : null;
+    const dictionary = dictionaries[lang];
     if (!dictionary || !Object.prototype.hasOwnProperty.call(dictionary, key)) {
       throw new Error(`Unknown message key: ${lang}.${key}`);
     }
@@ -68,10 +296,23 @@ const GrilleMessages = (() => {
   }
 
   function t(key, params) {
-    return format('ja', key, params);
+    return format(currentLang, key, params);
   }
 
-  return Object.freeze({ ja, format, t });
+  function setLang(lang) {
+    if (!Object.prototype.hasOwnProperty.call(dictionaries, lang)) throw new RangeError(`Unsupported language: ${lang}`);
+    currentLang = lang;
+  }
+
+  function getLang() {
+    return currentLang;
+  }
+
+  function staticKey(text) {
+    return staticKeyByText.get(text);
+  }
+
+  return Object.freeze({ dictionaries, ja, en, format, t, setLang, getLang, staticKey });
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

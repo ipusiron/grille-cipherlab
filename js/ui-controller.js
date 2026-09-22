@@ -5,6 +5,17 @@ class UIController {
     this.state = {
       encryption: { result: null, done: 0 },
       decryption: { result: null, done: 0, reversed: false },
+      solve: {
+        blocks: [],
+        blockIndex: 0,
+        searchToken: 0,
+        searching: false,
+        ranges: [],
+        options: null,
+        startedAt: 0,
+        processed: 0,
+        total: 0
+      },
       key: GrilleLogic.DEFAULT_KEY,
       direction: 'cw',
       currentGrille: GrilleLogic.keyToGrille(GrilleLogic.DEFAULT_KEY)
@@ -102,12 +113,20 @@ class UIController {
     });
   }
 
+  highlightSolveOrbit(row, col, active) {
+    const orbit = new Set(GrilleLogic.orbitOf(row, col).map(cell => cell.join(',')));
+    document.querySelectorAll('#solveBoard button').forEach(button => {
+      button.classList.toggle('is-orbit', active && orbit.has(`${button.dataset.row},${button.dataset.col}`));
+    });
+  }
+
   clearEncryption(showMessage = false) {
     const wasRunning = this.state.encryption.result !== null;
     this.state.encryption = { result: null, done: 0 };
     const legacyEncryptionGrid = this.getElement('encryptionGrid');
     if (legacyEncryptionGrid) legacyEncryptionGrid.replaceChildren();
     this.getElement('cipherText').value = '';
+    this.updateFrequencyLink('encryptFrequencyLink', '');
     this.getElement('nextRotation').disabled = true;
     const encryptionBoard = this.getElement('encryptionBoard');
     if (encryptionBoard) {
@@ -169,6 +188,8 @@ class UIController {
     this.state.currentGrille = GrilleLogic.keyToGrille(parsed.key);
     if (changed) this.clearRuns(true);
     this.renderGrilleCreator();
+    this.renderSolve();
+    if (typeof syncShareHash === 'function') syncShareHash();
     return true;
   }
 
@@ -177,6 +198,8 @@ class UIController {
     if (next !== this.state.direction) this.clearRuns(true);
     this.state.direction = next;
     this.renderGrilleCreator();
+    this.renderSolve();
+    if (typeof syncShareHash === 'function') syncShareHash();
   }
 
   showGrilleMessage(message, type = 'info') {
@@ -198,7 +221,9 @@ class UIController {
     const notices = [];
     if (result.removed) notices.push(GrilleMessages.t('input.removed', { count: result.removed }));
     if (result.padCount) notices.push(GrilleMessages.t('encrypt.padded', { count: result.padCount }));
-    if (notices.length) NotificationSystem.info(notices.join('／'), 'encrypt-notifications', 0);
+    if (notices.length) {
+      NotificationSystem.info(notices.join(GrilleMessages.t('message.separator')), 'encrypt-notifications', 0);
+    }
     this.renderEncryption();
     return true;
   }
@@ -293,7 +318,9 @@ class UIController {
     }
     this.getElement('encryptionStatus').textContent = GrilleMessages.t(statusKey, params);
     this.getElement('encryptionProgressBar').style.width = `${view.total ? view.done / view.total * 100 : 0}%`;
-    this.getElement('cipherText').value = GrilleLogic.formatGroups(view.output);
+    const formatted = GrilleLogic.formatGroups(view.output);
+    this.getElement('cipherText').value = formatted;
+    this.updateFrequencyLink('encryptFrequencyLink', formatted);
     this.getElement('encFirst').disabled = view.done === 0;
     this.getElement('encPrev').disabled = view.done === 0;
     this.getElement('nextRotation').disabled = view.finished;
@@ -370,6 +397,312 @@ class UIController {
     this.getElement('copyRecovered').disabled = !view.finished;
   }
 
+  clearSolveSearch() {
+    this.state.solve.searchToken++;
+    this.state.solve.searching = false;
+    this.state.solve.ranges = [];
+    this.state.solve.options = null;
+    this.state.solve.processed = 0;
+    this.state.solve.total = 0;
+    this.getElement('solveSearch').disabled = false;
+    this.getElement('solveCancel').disabled = true;
+    this.getElement('solveProgress').value = 0;
+    this.getElement('solveStatus').textContent = '';
+    this.getElement('solveResults').replaceChildren();
+  }
+
+  loadSolve() {
+    const checked = GrilleLogic.decrypt(this.getElement('solveCipher').value, this.state.key, {
+      direction: this.state.direction
+    });
+    NotificationSystem.clear('solve-notifications');
+    if (!checked.ok) {
+      NotificationSystem.error(GrilleMessages.t(checked.errorKey, checked.params), 'solve-notifications', 0);
+      return false;
+    }
+    this.state.solve.blocks = checked.blocks.map(block => block.cipher);
+    this.state.solve.blockIndex = 0;
+    const select = this.getElement('solveBlock');
+    select.replaceChildren();
+    checked.blocks.forEach((_block, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = GrilleMessages.t('solve.block', { block: index + 1, blocks: checked.blocks.length });
+      select.appendChild(option);
+    });
+    select.disabled = checked.blocks.length < 2;
+    NotificationSystem.success(GrilleMessages.t('solve.loaded', { blocks: checked.blocks.length }),
+      'solve-notifications', 0);
+    this.renderSolve();
+    this.updateFrequencyLink('solveFrequencyLink', GrilleLogic.formatGroups(checked.letters));
+    return true;
+  }
+
+  updateFrequencyLink(id, text) {
+    const link = this.getElement(id);
+    if (!link) return;
+    const value = String(text || '');
+    link.hidden = !value;
+    link.href = value
+      ? `https://ipusiron.github.io/frequency-analyzer/?text=${encodeURIComponent(value)}`
+      : 'https://ipusiron.github.io/frequency-analyzer/';
+  }
+
+  renderPrintSheet() {
+    const stencil = this.getElement('printStencil');
+    const paper = this.getElement('printPaper');
+    stencil.replaceChildren();
+    paper.replaceChildren();
+    const holes = new Set(GrilleLogic.holesAt(this.state.key, 0, this.state.direction)
+      .map(cell => cell.join(',')));
+    for (let row = 0; row < GrilleLogic.SIZE; row++) {
+      for (let col = 0; col < GrilleLogic.SIZE; col++) {
+        const stencilCell = document.createElement('div');
+        stencilCell.className = 'print-cell';
+        if (holes.has(`${row},${col}`)) stencilCell.classList.add('is-hole');
+        stencil.appendChild(stencilCell);
+        const paperCell = document.createElement('div');
+        paperCell.className = 'print-cell';
+        paperCell.textContent = `${row + 1},${col + 1}`;
+        paper.appendChild(paperCell);
+      }
+    }
+  }
+
+  renderSolve() {
+    const block = this.state.solve.blocks[this.state.solve.blockIndex];
+    const board = this.getElement('solveBoard');
+    const readout = this.getElement('solveReadout');
+    if (!board || !readout) return;
+    if (!block) {
+      board.replaceChildren();
+      readout.replaceChildren();
+      return;
+    }
+    const holes = new Set(GrilleLogic.holesAt(this.state.key, 0, this.state.direction)
+      .map(cell => cell.join(',')));
+    board.replaceChildren();
+    Array.from(block).forEach((char, index) => {
+      const row = Math.floor(index / GrilleLogic.SIZE);
+      const col = index % GrilleLogic.SIZE;
+      const button = document.createElement('button');
+      const hole = holes.has(`${row},${col}`);
+      button.type = 'button';
+      button.dataset.row = String(row);
+      button.dataset.col = String(col);
+      button.textContent = char;
+      button.classList.toggle('is-hole', hole);
+      button.setAttribute('aria-pressed', String(hole));
+      button.setAttribute('aria-label', GrilleMessages.t(hole ? 'solve.cell.hole' : 'solve.cell', {
+        row: row + 1,
+        col: col + 1,
+        char
+      }));
+      button.addEventListener('pointerenter', () => this.highlightSolveOrbit(row, col, true));
+      button.addEventListener('pointerleave', () => this.highlightSolveOrbit(row, col, false));
+      button.addEventListener('focus', () => this.highlightSolveOrbit(row, col, true));
+      button.addEventListener('blur', () => this.highlightSolveOrbit(row, col, false));
+      button.addEventListener('click', () => this.setKey(GrilleLogic.punch(this.state.key, row, col)));
+      board.appendChild(button);
+    });
+    const turns = GrilleSolver.workbench(block, this.state.key, this.state.direction);
+    let combined = turns.map(turn => turn.letters).join('');
+    if (this.getElement('solveReverse').checked) combined = GrilleLogic.reverseLetters(combined);
+    const fragment = document.createDocumentFragment();
+    turns.forEach(turn => {
+      const line = document.createElement('p');
+      line.textContent = GrilleMessages.t('solve.turn', {
+        turn: turn.step + 1,
+        letters: Array.from(turn.letters).join(' ')
+      });
+      fragment.appendChild(line);
+    });
+    const output = document.createElement('p');
+    output.className = 'solve-combined';
+    output.textContent = GrilleMessages.t('solve.combined', { letters: combined });
+    fragment.appendChild(output);
+    const lang = this.getElement('solveLang').value;
+    const score = document.createElement('p');
+    score.textContent = GrilleMessages.t('solve.score', {
+      score: GrilleSolver.scoreLetters(combined, lang),
+      perLetter: GrilleSolver.scorePerLetter(combined, lang).toFixed(1)
+    });
+    fragment.appendChild(score);
+    readout.replaceChildren(fragment);
+  }
+
+  rotateSolveKey() {
+    this.setKey(GrilleSolver.rotateKey(this.state.key));
+    NotificationSystem.info(GrilleMessages.t('solve.rotated', { key: this.state.key }), 'solve-notifications', 0);
+  }
+
+  solveOptions() {
+    const directions = this.getElement('solveDirections').value;
+    return {
+      lang: this.getElement('solveLang').value,
+      directions: directions === 'both' ? ['cw', 'ccw'] : [directions],
+      reverse: this.getElement('solveReverseScore').checked,
+      top: 10,
+      maxBlocks: 3
+    };
+  }
+
+  startSolveSearch() {
+    const options = this.solveOptions();
+    const probe = GrilleSolver.searchRange(this.getElement('solveCipher').value, options, 0, 0,
+      options.directions[0]);
+    NotificationSystem.clear('solve-notifications');
+    if (!probe.ok) {
+      NotificationSystem.error(GrilleMessages.t(probe.errorKey, probe.params), 'solve-notifications', 0);
+      return false;
+    }
+    this.clearSolveSearch();
+    const solve = this.state.solve;
+    solve.searching = true;
+    solve.options = options;
+    solve.startedAt = performance.now();
+    solve.total = GrilleLogic.KEY_COUNT * options.directions.length;
+    const token = solve.searchToken;
+    this.getElement('solveSearch').disabled = true;
+    this.getElement('solveCancel').disabled = false;
+    this.getElement('solveProgress').max = solve.total;
+    const queue = options.directions.flatMap(direction =>
+      Array.from({ length: GrilleLogic.KEY_COUNT / 4096 }, (_value, slice) => ({
+        direction,
+        from: slice * 4096,
+        to: (slice + 1) * 4096
+      }))
+    );
+    const runSlice = () => {
+      if (!solve.searching || solve.searchToken !== token) return;
+      const next = queue.shift();
+      if (!next) return this.finishSolveSearch(false);
+      solve.ranges.push(GrilleSolver.searchRange(this.getElement('solveCipher').value, options,
+        next.from, next.to, next.direction));
+      solve.processed += next.to - next.from;
+      this.renderSolveProgress();
+      setTimeout(runSlice, 0);
+    };
+    setTimeout(runSlice, 0);
+    return true;
+  }
+
+  renderSolveProgress() {
+    const solve = this.state.solve;
+    const seconds = (performance.now() - solve.startedAt) / 1000;
+    this.getElement('solveProgress').value = solve.processed;
+    this.getElement('solveStatus').textContent = GrilleMessages.t('solve.search.progress', {
+      done: solve.processed.toLocaleString(),
+      total: solve.total.toLocaleString(),
+      seconds: seconds.toFixed(1)
+    });
+  }
+
+  finishSolveSearch(partial) {
+    const solve = this.state.solve;
+    if (!solve.options) return;
+    solve.searching = false;
+    const elapsedMs = performance.now() - solve.startedAt;
+    const result = GrilleSolver.mergeSearchRanges(solve.ranges, solve.options, elapsedMs, partial);
+    this.getElement('solveSearch').disabled = false;
+    this.getElement('solveCancel').disabled = true;
+    this.renderSolveResults(result);
+    const key = partial ? 'solve.search.partial' : 'solve.search.done';
+    const params = partial ? {} : { classes: result.classCount.toLocaleString(), seconds: (elapsedMs / 1000).toFixed(1) };
+    this.getElement('solveStatus').textContent = GrilleMessages.t(key, params);
+    if (result.truncated) {
+      NotificationSystem.info(GrilleMessages.t('solve.search.truncated'), 'solve-notifications', 0);
+    }
+  }
+
+  cancelSolveSearch() {
+    if (!this.state.solve.searching) return;
+    this.state.solve.searchToken++;
+    this.finishSolveSearch(true);
+  }
+
+  renderSolveResults(result) {
+    const container = this.getElement('solveResults');
+    container.replaceChildren();
+    if (!result.ok || !result.top.length) return;
+    const table = document.createElement('table');
+    const caption = document.createElement('caption');
+    caption.textContent = GrilleMessages.t('solve.results.caption');
+    table.appendChild(caption);
+    const head = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    for (const key of ['rank', 'canonical', 'direction', 'score', 'reverse', 'plain', 'action']) {
+      const cell = document.createElement('th');
+      cell.scope = 'col';
+      cell.textContent = GrilleMessages.t(`solve.results.${key}`);
+      headRow.appendChild(cell);
+    }
+    head.appendChild(headRow);
+    table.appendChild(head);
+    const body = document.createElement('tbody');
+    result.top.forEach(item => {
+      const row = document.createElement('tr');
+      const shownPlain = item.reversed ? GrilleLogic.reverseLetters(item.plain) : item.plain;
+      const values = [
+        item.rank,
+        `${item.canonical} / ${item.bestKey}`,
+        GrilleMessages.t(`solve.direction.${item.direction}`),
+        `${item.score} / ${item.perLetter.toFixed(1)}`,
+        GrilleMessages.t(item.reversed ? 'solve.results.reversed' : 'solve.results.forward'),
+        shownPlain.slice(0, 36)
+      ];
+      values.forEach(value => {
+        const cell = document.createElement('td');
+        cell.textContent = String(value);
+        row.appendChild(cell);
+      });
+      const action = document.createElement('td');
+      const details = document.createElement('details');
+      const summary = document.createElement('summary');
+      summary.textContent = item.canonical;
+      const members = document.createElement('p');
+      members.textContent = GrilleMessages.t('solve.results.members', { members: item.members.join(' ') });
+      const best = document.createElement('p');
+      best.textContent = GrilleMessages.t('solve.results.best', { key: item.bestKey });
+      details.append(summary, members, best);
+      const use = document.createElement('button');
+      use.type = 'button';
+      use.textContent = GrilleMessages.t('solve.results.use');
+      use.addEventListener('click', () => this.useSolveResult(item, false));
+      const inspect = document.createElement('button');
+      inspect.type = 'button';
+      inspect.textContent = GrilleMessages.t('solve.results.workbench');
+      inspect.addEventListener('click', () => this.useSolveResult(item, true));
+      action.append(details, use, inspect);
+      row.appendChild(action);
+      body.appendChild(row);
+    });
+    table.appendChild(body);
+    const wrap = document.createElement('div');
+    wrap.className = 'table-wrap';
+    wrap.appendChild(table);
+    const difference = document.createElement('p');
+    difference.textContent = GrilleMessages.t('solve.results.difference', {
+      difference: result.top.length > 1 ? result.top[0].score - result.top[1].score : 0
+    });
+    container.append(difference, wrap);
+  }
+
+  useSolveResult(item, workbench) {
+    this.setKey(item.bestKey);
+    this.setDirection(item.direction);
+    if (workbench) {
+      this.loadSolve();
+      return;
+    }
+    this.getElement('cipherInput').value = this.getElement('solveCipher').value;
+    this.startDecryption();
+    this.state.decryption.reversed = item.reversed;
+    this.setDecryptionDone(this.state.decryption.result.stepCount);
+    const tab = document.querySelector('[role="tab"][data-target="decrypt"]');
+    if (typeof activateTab === 'function') activateTab(tab);
+  }
+
   // 初期化関数
   initEncryptionMode() {
     this.clearEncryption(false);
@@ -380,5 +713,15 @@ class UIController {
     this.clearDecryption(false);
     this.getElement(CONFIG.DOM_IDS.CIPHER_INPUT).value = '';
     this.getElement(CONFIG.DOM_IDS.START_DECRYPTION).disabled = false;
+  }
+
+  initSolveMode() {
+    this.clearSolveSearch();
+    this.state.solve.blocks = [];
+    this.state.solve.blockIndex = 0;
+    this.getElement('solveBlock').replaceChildren();
+    this.getElement('solveBoard').replaceChildren();
+    this.getElement('solveReadout').replaceChildren();
+    this.updateFrequencyLink('solveFrequencyLink', '');
   }
 }

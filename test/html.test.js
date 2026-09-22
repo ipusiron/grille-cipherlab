@@ -21,7 +21,7 @@ test('security metadata and local classic resources are present', () => {
 
 test('scripts load in the required dependency order', () => {
   const expected = [
-    'config', 'grille-cipher-logic', 'messages', 'samples', 'notification-system',
+    'config', 'grille-cipher-logic', 'ngram-models', 'grille-solver-logic', 'share', 'messages', 'samples', 'notification-system',
     'ui-controller', 'keyboard-shortcuts', 'theme-manager', 'main-refactored'
   ];
   const actual = [...html.matchAll(/<script\s+src="js\/([^"]+)\.js"/g)].map(match => match[1]);
@@ -37,16 +37,20 @@ test('the required controls and accessible relationships exist', () => {
     'cipherText', 'copyCipher', 'encrypt-notifications', 'cipherInput', 'startDecryption', 'decFirst',
     'decPrev', 'nextDecryption', 'decLast', 'decryptionStatus', 'decryptionBoard', 'decHideCard',
     'recoveredText', 'reverseOutput', 'copyRecovered', 'decrypt-notifications', 'helpButton',
-    'themeToggle', 'showShortcutHelp', 'helpModal', 'helpModalClose', 'help-shortcuts', 'globalStatus'
+    'themeToggle', 'showShortcutHelp', 'helpModal', 'helpModalClose', 'help-shortcuts', 'globalStatus',
+    'solveCipher', 'solveLoad', 'solveBlock', 'solveBoard', 'solveReadout', 'solveSearch',
+    'solveCancel', 'solveProgress', 'solveResults', 'solveLang', 'solveReverseScore',
+    'printGrille', 'copyShareUrl', 'encryptFrequencyLink', 'solveFrequencyLink', 'printSheet',
+    'printTitle', 'printStencil', 'printPaper', 'langToggle'
   ];
   for (const id of ids) assert.match(html, new RegExp(`\\bid="${id}"`), id);
   assert.doesNotMatch(html, /\bid="(?:generateGrille|toast)"/);
   assert.match(html, /<dialog\b[^>]*\bid="helpModal"/i);
   assert.equal((html.match(/\brole="tablist"/g) || []).length, 1);
   const tabs = (html.match(/\brole="tab"/g) || []).length;
-  assert.ok(tabs >= 3);
+  assert.equal(tabs, 4);
   assert.equal((html.match(/\brole="tabpanel"/g) || []).length, tabs);
-  for (const id of ['grille-notifications', 'encrypt-notifications', 'decrypt-notifications']) {
+  for (const id of ['grille-notifications', 'encrypt-notifications', 'decrypt-notifications', 'solve-notifications']) {
     assert.match(html, new RegExp(`id="${id}"[^>]*role="status"`));
   }
 });
@@ -61,5 +65,6 @@ test('textareas, external links, and Japanese terminology meet the contract', ()
   for (const match of html.matchAll(/<a\b[^>]*target="_blank"[^>]*>/gi)) {
     assert.match(match[0], /rel="noopener noreferrer"/i);
   }
+  assert.equal((html.match(/href="https:\/\/ipusiron\.github\.io\/frequency-analyzer\/"/g) || []).length, 2);
   assert.doesNotMatch(html, /fonts\.googleapis\.com|復号化|全ての/);
 });

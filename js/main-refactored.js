@@ -5,6 +5,69 @@ let themeManager;
 let globalStatusTimer;
 const t = (key, params) => GrilleMessages.t(key, params);
 
+function readLanguage() {
+  try {
+    const saved = localStorage.getItem(CONFIG.LANG.STORAGE_KEY);
+    if (CONFIG.LANG.SUPPORTED.includes(saved)) return saved;
+  } catch (_error) {
+    return navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en';
+  }
+  return navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en';
+}
+
+function saveLanguage(lang) {
+  try {
+    localStorage.setItem(CONFIG.LANG.STORAGE_KEY, lang);
+  } catch (_error) {
+    return false;
+  }
+  return true;
+}
+
+function translateStaticPage() {
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const match = node.nodeValue.match(/^(\s*)(.*?)(\s*)$/s);
+    if (!match || !match[2]) continue;
+    const key = node.grilleI18nKey || GrilleMessages.staticKey(match[2]);
+    if (!key) continue;
+    node.grilleI18nKey = key;
+    node.nodeValue = `${match[1]}${t(key)}${match[3]}`;
+  }
+  document.querySelectorAll('*').forEach(element => {
+    for (const name of ['title', 'aria-label', 'placeholder']) {
+      if (!element.hasAttribute(name)) continue;
+      element.grilleI18nAttributes ||= {};
+      const key = element.grilleI18nAttributes[name] || GrilleMessages.staticKey(element.getAttribute(name));
+      if (!key) continue;
+      element.grilleI18nAttributes[name] = key;
+      element.setAttribute(name, t(key));
+    }
+  });
+}
+
+function applyLanguage(lang, save = false, refresh = true) {
+  GrilleMessages.setLang(lang);
+  document.documentElement.lang = lang;
+  document.title = t('app.title');
+  translateStaticPage();
+  const button = document.getElementById('langToggle');
+  button.textContent = lang === 'ja' ? 'EN' : 'JA';
+  button.setAttribute('aria-label', t(lang === 'ja' ? 'lang.toEnglish' : 'lang.toJapanese'));
+  if (save) saveLanguage(lang);
+  if (!refresh || !uiController) return;
+  NotificationSystem.clearAll();
+  uiController.initGrilleCreator();
+  uiController.renderSolve();
+  if (uiController.state.encryption.result) uiController.renderEncryption();
+  if (uiController.state.decryption.result) uiController.renderDecryption();
+  if (themeManager) themeManager.updateToggleButton();
+}
+
 function showGlobalStatus(message) {
   const status = document.getElementById('globalStatus');
   clearTimeout(globalStatusTimer);
@@ -21,6 +84,37 @@ function initBaseMatrix() {
 
 function showParseError(result) {
   uiController.showGrilleMessage(t(result.errorKey, result.params), 'error');
+}
+
+function syncShareHash() {
+  const hash = GrilleShare.format(uiController.state.key, uiController.state.direction);
+  history.replaceState(null, '', hash);
+}
+
+function currentShareUrl() {
+  const base = location.protocol === 'file:'
+    ? location.href.split('#')[0]
+    : `${location.origin}${location.pathname}`;
+  return `${base}${GrilleShare.format(uiController.state.key, uiController.state.direction)}`;
+}
+
+function loadShareHash() {
+  if (!location.hash) {
+    syncShareHash();
+    return;
+  }
+  const parsed = GrilleShare.parse(location.hash);
+  if (!parsed.ok) {
+    uiController.showGrilleMessage(t(parsed.errorKey === 'share.direction' ? parsed.errorKey : 'share.invalid'), 'error');
+    syncShareHash();
+    return;
+  }
+  uiController.setKey(parsed.key);
+  uiController.setDirection(parsed.direction);
+  uiController.showGrilleMessage(t('share.loaded', {
+    key: parsed.key,
+    direction: t(`solve.direction.${parsed.direction}`)
+  }), 'success');
 }
 
 function bindGrilleCreator() {
@@ -74,10 +168,14 @@ function bindGrilleCreator() {
     const sample = GrilleSamples.find(item => item.id === id);
     if (!sample) return;
     uiController.clearRuns(true);
+    uiController.initSolveMode();
     uiController.setKey(sample.key);
     uiController.setDirection(sample.direction);
     document.getElementById('plainText').value = sample.plain;
     document.getElementById('cipherInput').value = sample.cipher;
+    document.getElementById('solveCipher').value = sample.cipher;
+    const normalizedCipher = GrilleLogic.normalizeText(sample.cipher);
+    uiController.updateFrequencyLink('solveFrequencyLink', GrilleLogic.formatGroups(normalizedCipher.letters));
     const name = t(sample.nameKey);
     const note = sample.noteKey ? ` ${t(sample.noteKey)}` : '';
     uiController.showGrilleMessage(t('sample.loaded', { name }) + note, 'success');
@@ -134,6 +232,7 @@ async function copyRecoveredText() {
 function resetAllModes() {
   uiController.initEncryptionMode();
   uiController.initDecryptionMode();
+  uiController.initSolveMode();
   
   // すべての通知をクリア
   NotificationSystem.clearAll();
@@ -157,10 +256,15 @@ function activateTab(tab, focus = true) {
 
 // イベント登録
 document.addEventListener("DOMContentLoaded", () => {
+  applyLanguage(readLanguage(), false, false);
   // インスタンス作成
   uiController = new UIController();
   keyboardManager = new KeyboardShortcutManager(uiController);
   themeManager = new ThemeManager();
+
+  document.getElementById('langToggle').addEventListener('click', () => {
+    applyLanguage(GrilleMessages.getLang() === 'ja' ? 'en' : 'ja', true);
+  });
 
   // 平文や埋め草を変えたら、前の暗号化を取り消す
   document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT).addEventListener("input", () => {
@@ -213,8 +317,43 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('reverseOutput').addEventListener('click', () => uiController.toggleDecryptionReverse());
   document.getElementById('copyRecovered').addEventListener('click', copyRecoveredText);
 
+  document.getElementById('solveCipher').addEventListener('input', () => {
+    uiController.clearSolveSearch();
+    uiController.state.solve.blocks = [];
+    uiController.renderSolve();
+    const normalized = GrilleLogic.normalizeText(document.getElementById('solveCipher').value);
+    uiController.updateFrequencyLink('solveFrequencyLink', GrilleLogic.formatGroups(normalized.letters));
+  });
+  document.getElementById('solveLoad').addEventListener('click', () => uiController.loadSolve());
+  document.getElementById('solveBlock').addEventListener('change', event => {
+    uiController.state.solve.blockIndex = Number(event.target.value);
+    uiController.renderSolve();
+  });
+  document.getElementById('solveRotateKey').addEventListener('click', () => uiController.rotateSolveKey());
+  document.getElementById('solveReverse').addEventListener('change', () => uiController.renderSolve());
+  document.getElementById('solveLang').addEventListener('change', () => uiController.renderSolve());
+  document.getElementById('solveSearch').addEventListener('click', () => uiController.startSolveSearch());
+  document.getElementById('solveCancel').addEventListener('click', () => uiController.cancelSolveSearch());
+
   // その他のイベント
   document.getElementById(CONFIG.DOM_IDS.COPY_CIPHER).addEventListener("click", copyCipherText);
+  document.getElementById('printGrille').addEventListener('click', () => {
+    uiController.renderPrintSheet();
+    document.getElementById('printTitle').textContent = t('print.title', {
+      key: uiController.state.key,
+      direction: t(`solve.direction.${uiController.state.direction}`)
+    });
+    window.print();
+  });
+  document.getElementById('copyShareUrl').addEventListener('click', async () => {
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('clipboard');
+      await navigator.clipboard.writeText(currentShareUrl());
+      uiController.showGrilleMessage(t('share.copied'), 'success');
+    } catch (_error) {
+      uiController.showGrilleMessage(t('copy.failed'), 'error');
+    }
+  });
   
   // テーマ切り替え
   document.getElementById(CONFIG.DOM_IDS.THEME_TOGGLE).addEventListener("click", () => {
@@ -272,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 初期化
   resetAllModes();
+  loadShareHash();
 
   const randomFillerOption = document.getElementById('fillerRandom');
   randomFillerOption.disabled = !globalThis.crypto || typeof globalThis.crypto.getRandomValues !== 'function';

@@ -310,16 +310,6 @@ const GrilleLogic = (() => {
     return Math.max(0, Math.min(total, Number.isFinite(Number(done)) ? Math.trunc(Number(done)) : 0));
   }
 
-  function viewBase(result, done, decrypting) {
-    const safeDone = clampDone(done, result.stepCount);
-    const turn = safeDone ? safeDone - 1 : 0;
-    const blockIndex = Math.min(Math.floor(turn / 4), result.blocks.length - 1);
-    const rotation = turn % 4;
-    const block = result.blocks[blockIndex];
-    const holes = holesAt(result.direction === undefined ? DEFAULT_KEY : result.key, rotation, result.direction);
-    return { safeDone, turn, blockIndex, rotation, block, holes, decrypting };
-  }
-
   function encryptionView(result, done) {
     const safeDone = clampDone(done, result.stepCount);
     const turns = safeDone ? safeDone - 1 : 0;
