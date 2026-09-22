@@ -111,6 +111,8 @@ function actualNodes(directory = root, relative = '') {
     'js/grille-solver-logic.js',
     'js/ngram-models.js',
     'js/share.js',
+    'README.en.md',
+    'test/i18n.test.js',
     'test/ngram.test.js',
     'test/share.test.js',
     'test/solver.test.js'

@@ -32,6 +32,8 @@ hub: true
 ---
 -->
 
+[English](README.en.md) · 日本語
+
 # 🌀 Grille CipherLab - 回転グリル暗号の可視化ツール
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/grille-cipherlab?style=social)

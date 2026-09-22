@@ -5,6 +5,69 @@ let themeManager;
 let globalStatusTimer;
 const t = (key, params) => GrilleMessages.t(key, params);
 
+function readLanguage() {
+  try {
+    const saved = localStorage.getItem(CONFIG.LANG.STORAGE_KEY);
+    if (CONFIG.LANG.SUPPORTED.includes(saved)) return saved;
+  } catch (_error) {
+    return navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en';
+  }
+  return navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en';
+}
+
+function saveLanguage(lang) {
+  try {
+    localStorage.setItem(CONFIG.LANG.STORAGE_KEY, lang);
+  } catch (_error) {
+    return false;
+  }
+  return true;
+}
+
+function translateStaticPage() {
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const match = node.nodeValue.match(/^(\s*)(.*?)(\s*)$/s);
+    if (!match || !match[2]) continue;
+    const key = node.grilleI18nKey || GrilleMessages.staticKey(match[2]);
+    if (!key) continue;
+    node.grilleI18nKey = key;
+    node.nodeValue = `${match[1]}${t(key)}${match[3]}`;
+  }
+  document.querySelectorAll('*').forEach(element => {
+    for (const name of ['title', 'aria-label', 'placeholder']) {
+      if (!element.hasAttribute(name)) continue;
+      element.grilleI18nAttributes ||= {};
+      const key = element.grilleI18nAttributes[name] || GrilleMessages.staticKey(element.getAttribute(name));
+      if (!key) continue;
+      element.grilleI18nAttributes[name] = key;
+      element.setAttribute(name, t(key));
+    }
+  });
+}
+
+function applyLanguage(lang, save = false, refresh = true) {
+  GrilleMessages.setLang(lang);
+  document.documentElement.lang = lang;
+  document.title = t('app.title');
+  translateStaticPage();
+  const button = document.getElementById('langToggle');
+  button.textContent = lang === 'ja' ? 'EN' : 'JA';
+  button.setAttribute('aria-label', t(lang === 'ja' ? 'lang.toEnglish' : 'lang.toJapanese'));
+  if (save) saveLanguage(lang);
+  if (!refresh || !uiController) return;
+  NotificationSystem.clearAll();
+  uiController.initGrilleCreator();
+  uiController.renderSolve();
+  if (uiController.state.encryption.result) uiController.renderEncryption();
+  if (uiController.state.decryption.result) uiController.renderDecryption();
+  if (themeManager) themeManager.updateToggleButton();
+}
+
 function showGlobalStatus(message) {
   const status = document.getElementById('globalStatus');
   clearTimeout(globalStatusTimer);
@@ -193,10 +256,15 @@ function activateTab(tab, focus = true) {
 
 // イベント登録
 document.addEventListener("DOMContentLoaded", () => {
+  applyLanguage(readLanguage(), false, false);
   // インスタンス作成
   uiController = new UIController();
   keyboardManager = new KeyboardShortcutManager(uiController);
   themeManager = new ThemeManager();
+
+  document.getElementById('langToggle').addEventListener('click', () => {
+    applyLanguage(GrilleMessages.getLang() === 'ja' ? 'en' : 'ja', true);
+  });
 
   // 平文や埋め草を変えたら、前の暗号化を取り消す
   document.getElementById(CONFIG.DOM_IDS.PLAIN_TEXT).addEventListener("input", () => {

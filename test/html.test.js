@@ -41,7 +41,7 @@ test('the required controls and accessible relationships exist', () => {
     'solveCipher', 'solveLoad', 'solveBlock', 'solveBoard', 'solveReadout', 'solveSearch',
     'solveCancel', 'solveProgress', 'solveResults', 'solveLang', 'solveReverseScore',
     'printGrille', 'copyShareUrl', 'encryptFrequencyLink', 'solveFrequencyLink', 'printSheet',
-    'printTitle', 'printStencil', 'printPaper'
+    'printTitle', 'printStencil', 'printPaper', 'langToggle'
   ];
   for (const id of ids) assert.match(html, new RegExp(`\\bid="${id}"`), id);
   assert.doesNotMatch(html, /\bid="(?:generateGrille|toast)"/);

@@ -35,6 +35,11 @@ const CONFIG = Object.freeze({
     AUTO: 'auto',
     STORAGE_KEY: 'grille-cipher-theme',
     CSS_CLASS: 'dark-mode'
+  }),
+  LANG: Object.freeze({
+    STORAGE_KEY: 'grille-cipher-lang',
+    DEFAULT: 'ja',
+    SUPPORTED: Object.freeze(['ja', 'en'])
   })
 });
 
