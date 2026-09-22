@@ -565,10 +565,6 @@ kbd {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .punch-board button {
-    min-height: 40px;
-  }
-
   .board-wrap {
     padding: 1.25rem;
   }

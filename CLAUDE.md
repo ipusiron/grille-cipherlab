@@ -1,72 +1,62 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides development guidance for Grille CipherLab, an educational rotating-grille cipher tool in the Day 024 series.
 
-## Project Overview
+## Commands
 
-This is a **Rotating Grille Cipher visualization tool** - an educational web application that demonstrates the historical rotating grille cipher technique. It's part of the "100 Security Tools Created with Generative AI" project (Day 024).
+- Run tests with `npm test` on Node.js 22 or newer.
+- Serve locally with `python -m http.server 8000` when HTTP behavior is needed.
+- The application also runs by opening `index.html` through `file://`.
+- There are no npm dependencies, build steps, frameworks, or external runtime resources.
 
-## Tech Stack
+## Files
 
-- **Pure vanilla JavaScript** - No frameworks or build tools
-- **Static HTML/CSS/JS** - Can be served directly without compilation
-- **No package manager** - No npm, yarn, or other dependency management
-- **No external JavaScript dependencies** - Only uses Google Fonts for styling
+- `index.html`: the three ARIA tab panels and the help dialog.
+- `style.css`: theme variables, the responsive layout, the paper, and the rotating card.
+- `js/grille-cipher-logic.js`: pure key, normalization, cipher, sample-view, and formatting functions.
+- `js/messages.js`: all strings emitted by JavaScript. Add future languages here.
+- `js/samples.js`: book, Sandorf, and short-text samples.
+- `js/ui-controller.js`: UI state and rendering derived from the pure logic.
+- `js/main-refactored.js`: initialization and event registration.
+- `js/notification-system.js`: persistent status messages.
+- `js/keyboard-shortcuts.js`: shortcuts that defer to focused controls.
+- `js/theme-manager.js`: light, dark, and automatic theme selection.
+- `test/`: dependency-free `node:test` coverage, including all 262,144 keys and the Sandorf known answer.
 
-## Development Commands
+Classic scripts load in the order declared at the end of `index.html`. Do not convert them to ES modules because direct `file://` use is supported.
 
-Since this is a static site with no build process:
+## Cipher convention
 
-- **Run locally**: `python -m http.server 8000` or `npx serve .`
-- **Deploy**: Upload the files to any static hosting service
-- **No build/test/lint commands** - The project has no build pipeline or test suite
+- The grid is 6 by 6, with nine holes and four orientations.
+- The initial placement is used first; clockwise rotation is the default.
+- A nine-digit key lists the 3 by 3 quadrants in row order.
+- Digits 1, 2, 3, and 4 mean upper-left, upper-right, lower-right, and lower-left.
+- Encryption fills holes in row order and reads the fixed paper in row order.
+- Text longer than 36 letters continues on the next paper with the same key.
+- Short input is padded with X or random A-Z letters from `crypto.getRandomValues`.
 
-## Architecture
+Do not add alternative reading orders, keyword-derived keys, URL sharing, brute force, printable cards, or variable grille sizes in this release.
 
-The application uses a modular JavaScript architecture with global scope classes:
+## State and rendering
 
-```
-js/
-├── config.js              # Central configuration (CONFIG object, frozen with Object.freeze)
-├── grille-cipher-logic.js # Pure cipher logic (GrilleCipher class)
-├── notification-system.js # User notifications (NotificationSystem, ValidationHelper, ErrorMessages)
-├── ui-controller.js       # UI state & rendering (UIController class)
-├── keyboard-shortcuts.js  # Keyboard handling (KeyboardShortcutManager class)
-├── theme-manager.js       # Dark mode support (ThemeManager class)
-└── main-refactored.js     # App initialization and event binding
-```
+Each encryption or decryption run keeps one progress value, `done`. `GrilleLogic.encryptionView` and `GrilleLogic.decryptionView` derive the complete visible state from it. Moving backward and forward must not mutate the cipher result.
 
-**Load Order**: Scripts must load in this order (defined in index.html) since later scripts depend on earlier ones.
+The paper stays fixed. Only the card receives a CSS `transform`. The same key drives the 3 by 3 selectors, the 6 by 6 punch board, the nine-digit field, and the X/dot pattern.
 
-### Key Classes
+JavaScript may write only `element.style.transform` for the card and `element.style.width` for progress bars. Use classes and the `hidden` attribute for everything else. Build DOM with `createElement`, `replaceChildren`, and `textContent`; do not use `innerHTML`.
 
-- **`GrilleCipher`**: Pure cipher logic - grille generation, rotation, encrypt/decrypt operations
-- **`UIController`**: Manages all UI state in `this.state` object, renders grids, handles step-by-step visualization
-- **`NotificationSystem`**: Static methods for displaying error/warning/success/info messages
-- **`ValidationHelper`**: Input validation for matrix values and text input
+## Messages and privacy
 
-### Configuration
+Every string emitted by JavaScript must go through `GrilleMessages.t(key, values)`. Keep Japanese out of other JavaScript source except comments. This leaves a clean path for a later English dictionary.
 
-All configurable values are centralized in `CONFIG` object (`config.js`):
-- `GRILLE_SIZE` (6), `BASE_SIZE` (3), `ROTATION_COUNT` (4)
-- `DOM_IDS` - All element IDs as constants
-- `CSS_CLASSES` - All CSS class names
-- `KEYBOARD_SHORTCUTS` - Key bindings
-- `DEFAULT_BASE_MATRIX` - Initial 3×3 matrix values
+The application makes no external requests. Do not store plaintext, ciphertext, or keys in localStorage or URLs. Theme is the only stored value, and storage failures must not stop initialization.
 
-## Key Implementation Details
+## Tests
 
-1. **Grille Generation**: `GrilleCipher.generateGrille()` creates 6×6 grille from 3×3 base matrix. Each value (1-4) indicates which rotation step that cell becomes a hole.
+Keep tests aligned with README tables and browser behavior. In particular, preserve:
 
-2. **Rotation Logic**: `rotateMatrix()` uses transposition + reversal for 90° rotations
-
-3. **Step-by-step Visualization**: `encryptStep()` and `decryptStep()` process one rotation at a time, returning positions for UI animation
-
-4. **State Management**: `UIController.state` tracks encryption/decryption progress, grids, and current grille
-
-## Important Notes
-
-- This is an **educational tool** for demonstrating cryptographic concepts, not for actual security use
-- Default example text: "HAPPY HOLIDAYS FROM THE HUNTINGTON FAMILY"
-- Documentation is primarily in Japanese (README.md)
-- Licensed under MIT License (Copyright 2025 ipusiron)
+- the book ciphertext `TDHOAA PYHPEH UNFYAS MFNROH OLTIII NLMGYT`;
+- the short-text round trip with 24 X padding letters;
+- all 262,144 valid keys;
+- the 18 Sandorf words and the 108-letter reverse reading;
+- static checks for CSP, ARIA, classic scripts, allowed style writes, and contrast.
