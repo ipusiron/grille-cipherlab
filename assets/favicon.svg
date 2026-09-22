@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Grille CipherLab">
+  <rect width="32" height="32" rx="5" fill="#1e3a5f"/>
+  <rect x="4" y="4" width="7" height="7" fill="#ffeb3b"/>
+  <rect x="20.5" y="12.5" width="7" height="7" fill="#ffeb3b"/>
+  <rect x="12.5" y="20.5" width="7" height="7" fill="#ffeb3b"/>
+  <rect x="4" y="20.5" width="7" height="7" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="12.5" y="4" width="7" height="7" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="20.5" y="4" width="7" height="7" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="4" y="12.5" width="7" height="7" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="12.5" y="12.5" width="7" height="7" fill="#ffffff" fill-opacity="0.18"/>
+  <rect x="20.5" y="20.5" width="7" height="7" fill="#ffffff" fill-opacity="0.18"/>
+</svg>

@@ -1,137 +1,74 @@
 # 技術情報
 
----
-## 🏗️ **アーキテクチャ設計**
+## アーキテクチャ
 
----
-### **1. モジュラー設計パターン**
-```javascript
-// 責務の明確な分離
-class GrilleCipher {          // 純粋な暗号ロジック
-  encrypt(), decrypt()        // ビジネスロジック層
-}
+Grille CipherLabは、classic scriptだけで動く静的Webアプリです。暗号ロジック、画面状態、文言、通知、ショートカット、テーマを別ファイルへ分けています。依存パッケージやビルド処理はありません。
 
-class UIController {          // UI状態管理
-  state: {...}               // 状態管理層  
-  drawGrid(), animate()      // プレゼンテーション層
-}
+`index.html`では、設定、純粋ロジック、文言、見本、通知、画面、ショートカット、テーマ、初期化の順に読み込みます。ES moduleを使わないため、`file://`から開いた場合も主要機能が動きます。
 
-class NotificationSystem {    // ユーザーフィードバック
-  error(), warning()         // インフラストラクチャ層
-}
-```
+## 鍵と穴
 
----
-### **2. 状態管理パターン**
-```javascript
-// 集約された状態オブジェクト
-state = {
-  encryptionGrid: 6x6Array,    // 暗号化グリッド状態
-  decryptionGrid: 6x6Array,    // 復号化グリッド状態  
-  currentGrille: boolean[][],  // 現在のグリルパターン
-  rotationCount: number,       // 回転カウンター
-  // ... その他の状態
-}
-```
+`GrilleLogic`は6×6の座標を`[行, 列]`で扱います。鍵は1〜4の数字9個で、3×3の区画を行順に並べたものです。各数字は、4回転で重なる4マスのどれを初期の穴にするかを示します。
 
----
-## 🎯 **技術的工夫**
+- `parseKey`: NFKC正規化後に9桁の鍵を検証
+- `holesAt`: 指定した回数と向きの穴9個を計算
+- `punch`: 6×6のマスから、そのマスを穴にする鍵を計算
+- `formatHolePattern`: 鍵を6行の`X`と`.`へ変換
+- `parseHolePattern`: 穴のパターンを鍵へ戻す
 
----
-### **1. 行列回転アルゴリズム**
-```javascript
-// 効率的な90度回転（転置→反転）
-rotateMatrix(matrix, times) {
-  let result = matrix.map(row => [...row]);
-  for (let t = 0; t < times; t++) {
-    result = result[0].map((_, i) => 
-      result.map(row => row[i]).reverse()
-    );
-  }
-  return result;
-}
-```
+4回転で36マスを1回ずつ覆う条件は、全262,144鍵について自動テストで検証しています。
 
----
-### **2. グリル生成アルゴリズム**
-```javascript
-// 3×3から6×6への効率的拡張
-const offsets = [
-  [0, 0],  // 0° → 左上
-  [0, 3],  // 90° → 右上  
-  [3, 3],  // 180° → 右下
-  [3, 0]   // 270° → 左下
-];
-// 各回転で適切な位置にマッピング
-```
+## 入力の正規化
 
----
-### **3. アニメーション制御システム**
-```javascript
-// プロミスベースの非同期アニメーション
-applyRotationAnimation(elementId, callback) {
-  element.classList.add("rotate-animation");
-  setTimeout(() => {
-    element.classList.remove("rotate-animation");
-    callback?.();
-  }, 400);
-}
-```
+`normalizeText`はNFKD正規化を使い、全角英字とアクセントつき英字をA〜Zへ寄せます。空白・数字・記号は取り除き、取り除いた文字数を通知に使います。平文は最大360文字です。
 
----
-### **4. バリデーション層**
-```javascript
-// 段階的検証システム
-class ValidationHelper {
-  static validateBaseMatrix(matrix) {
-    // 1. 空値チェック → 2. 範囲チェック → 3. 完全性チェック
-  }
-  static validateTextLength(text, maxLength = 36) {
-    // 文字数制限とグリッド容量の整合性確保
-  }
-}
-```
+36文字に足りない場合は`padLetters`が埋め草を足します。既定はXです。ランダムな英字を選んだ場合、画面側が`crypto.getRandomValues`でA〜Zを生成して純粋ロジックへ渡します。
 
----
-## 🎨 **UI/UX実装技術**
+## 暗号化と復号
 
----
-### **1. CSS Grid + Animation**
-```css
-/* 6×6グリッドの動的レンダリング */
-#encryptionGrid {
-  display: grid;
-  grid-template-columns: repeat(6, 40px);
-  transform-origin: center center;  /* 中心基準回転 */
-}
+`encrypt`は、置いた向きから始めて穴を行順に走査し、平文を紙へ書きます。型紙を選択した向きへ90°ずつ回し、4回が済んだ紙を行順に読んで暗号文にします。平文が36文字を超えると、同じ鍵で次の紙へ進みます。
 
-/* スムーズな回転アニメーション */
-@keyframes rotateBoard {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(90deg); }
-}
-```
+`decrypt`は暗号文を36文字ずつ紙へ置き、同じ穴の順番で読みます。暗号文の長さが36の倍数でない場合は処理しません。
 
----
-### **2. 通知システム**
-```javascript
-// 型安全な通知システム
-static show(message, type = 'info', containerId = null, duration = 4000) {
-  // DOM注入攻撃防止 + 自動削除 + 型別スタイリング
-}
-```
+## 画面状態
 
----
-## 🔧 **パフォーマンス最適化**
+暗号化と復号の状態は、それぞれ結果と`done`を持ちます。`done`は済んだ回数であり、タイマーやアニメーション終了イベントでは進めません。
 
----
-### **1. DOM操作最適化**
-- **DocumentFragment使用**: バッチDOM更新
-- **要素キャッシュ**: 頻繁アクセス要素の事前取得
-- **イベント委譲**: 効率的なイベントハンドリング
+- `encryptionView(result, done)`: 置いた文字、現在のブロック、角度、完了状態を導出
+- `decryptionView(result, done)`: 読んだ文字、出力、現在のブロック、角度、完了状態を導出
 
----
-### **2. メモリ管理**
-- **状態のイミュータブル操作**: 副作用防止
-- **適切なクリーンアップ**: イベントリスナー解除
-- **配列コピー**: 参照による意図しない変更防止
+画面は同じ`done`から何度描いても同じ結果になります。このため、「4→1→3」のように移動しても1回目の表示は変わりません。
+
+紙のマスは固定し、型紙だけへ`transform: rotate(...)`を適用します。進捗バーの`width`と型紙の`transform`以外は、JavaScriptからstyleへ代入しません。
+
+## DOMと通知
+
+盤・マス・見本の選択肢は`createElement`で作り、`replaceChildren`で置き換えます。利用者の入力と生成結果はフォームの`value`または`textContent`だけで表示します。
+
+通知は`NotificationSystem`が`role="status"`の領域へ表示します。鍵や入力に関わる状態通知は自動で消えず、次の通知または明示的なクリアまで残ります。JavaScriptが画面へ出す文は`messages.js`の辞書を通します。
+
+## キーボードとタブ
+
+ショートカットは、操作要素にフォーカスがある場合、IME変換中、キーリピート中、ダイアログ表示中には介入しません。ARIAタブは←→・Home・Endで移動し、移動先を選択します。
+
+ヘルプには`dialog.showModal()`を使います。ブラウザー標準のEscで閉じ、閉じたときは開いたボタンへフォーカスを戻します。
+
+## セキュリティと保存
+
+ページはmeta要素でCSPとreferrer policyを指定しています。スクリプト・CSS・画像は同一オリジンだけを許可し、`connect-src 'none'`としています。外部通信APIは使いません。
+
+localStorageへ保存するのはテーマだけです。読み書きは例外処理で囲み、利用できない環境でも初期化を続けます。平文・暗号文・鍵は保存しません。
+
+## テスト
+
+`npm test`はNode.js標準の`node:test`を使います。主な検証対象は次のとおりです。
+
+- 鍵・穴・回転・パターンの既知値と全鍵
+- 時計回り・反時計回りの暗号化と復号
+- 複数ブロックと埋め草
+- ヴェルヌ『Mathias Sandorf』の既知解答
+- 表示状態の順序非依存性
+- CSP・ARIA・コントラスト・行長・禁止API
+- READMEの表とコードの一致
+
+GitHub ActionsはNode.js 22で同じテストをpushとpull_requestの両方に対して実行します。
