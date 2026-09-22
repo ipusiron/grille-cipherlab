@@ -26,11 +26,42 @@
   <!-- モード① グリル作成 -->
   <section id="grille" class="tab-content active">
     <h2>① グリル作成モード</h2>
-    <p>3×3マトリクスを基に、6×6の回転グリルを生成します。</p>
-    <div id="baseMatrix"></div>
-    <button id="generateGrille">→ グリル生成</button>
+    <p>穴は9個。4回転で36マスをちょうど1回ずつ覆います。鍵は4^9＝262,144通りです。</p>
+    <div class="grille-editor-layout">
+      <section>
+        <h3>3×3の数字</h3>
+        <div id="baseMatrix" class="base-matrix"></div>
+      </section>
+      <section>
+        <h3>6×6の穴あけ盤</h3>
+        <div id="punchBoard" class="punch-board"></div>
+      </section>
+    </div>
+    <div class="key-controls">
+      <label for="keyText">9桁の鍵</label>
+      <input type="text" id="keyText" inputmode="numeric" maxlength="20" autocomplete="off" />
+      <button type="button" id="loadKey">鍵を読み込む</button>
+      <button type="button" id="randomKey">ランダムなグリル</button>
+      <button type="button" id="resetKey">既定に戻す</button>
+    </div>
+    <fieldset>
+      <legend>回す向き</legend>
+      <label><input type="radio" id="directionCw" name="direction" value="cw" checked /> 時計回り（既定）</label>
+      <label><input type="radio" id="directionCcw" name="direction" value="ccw" /> 反時計回り</label>
+    </fieldset>
+    <details>
+      <summary>穴のパターンと見本</summary>
+      <label for="patternText">穴のパターン（Xが穴、.が穴でないマス）</label>
+      <textarea id="patternText" rows="6" spellcheck="false"></textarea>
+      <div class="button-row">
+        <button type="button" id="loadPattern">パターンを読み込む</button>
+        <button type="button" id="copyPattern">コピー</button>
+      </div>
+      <label for="sampleSelect">見本</label>
+      <select id="sampleSelect"></select>
+      <button type="button" id="loadSample">見本を読み込む</button>
+    </details>
     <div id="grille-notifications" class="notification-container"></div>
-    <div id="grillePreview"></div>
   </section>
 
   <!-- モード② 暗号化 -->
@@ -208,6 +239,8 @@
 
   <script src="js/config.js"></script>
   <script src="js/grille-cipher-logic.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/samples.js"></script>
   <script src="js/notification-system.js"></script>
   <script src="js/ui-controller.js"></script>
   <script src="js/keyboard-shortcuts.js"></script>

@@ -3,28 +3,81 @@ let cipher;
 let uiController;
 let keyboardManager;
 let themeManager;
+const t = (key, params) => GrilleMessages.t(key, params);
 
 // 🔹 グリル作成モード：3x3初期化・回転・6x6生成
 function initBaseMatrix() {
-  const container = document.getElementById(CONFIG.DOM_IDS.BASE_MATRIX);
-  container.innerHTML = "";
+  uiController.initGrilleCreator();
+}
 
-  // 初期値設定：CONFIG.DEFAULT_BASE_MATRIX
-  const initialValues = CONFIG.DEFAULT_BASE_MATRIX;
+function showParseError(result) {
+  uiController.showGrilleMessage(t(result.errorKey, result.params), 'error');
+}
 
-  for (let r = 0; r < CONFIG.BASE_SIZE; r++) {
-    for (let c = 0; c < CONFIG.BASE_SIZE; c++) {
-      const input = document.createElement("input");
-      input.type = "number";
-      input.min = CONFIG.MATRIX_VALUE_MIN.toString();
-      input.max = CONFIG.MATRIX_VALUE_MAX.toString();
-      input.value = initialValues[r][c];
-      input.dataset.row = r;
-      input.dataset.col = c;
-      Object.assign(input.style, CONFIG.INPUT_STYLES);
-      container.appendChild(input);
+function bindGrilleCreator() {
+  document.getElementById('baseMatrix').addEventListener('change', () => {
+    const values = Array.from(document.querySelectorAll('#baseMatrix select'), select => select.value);
+    uiController.setKey(values.join(''));
+  });
+
+  document.getElementById('loadKey').addEventListener('click', () => {
+    const parsed = GrilleLogic.parseKey(document.getElementById('keyText').value);
+    if (!parsed.ok) return showParseError(parsed);
+    uiController.setKey(parsed.key);
+    uiController.showGrilleMessage(t('key.loaded'), 'success');
+  });
+
+  document.getElementById('randomKey').addEventListener('click', () => {
+    const bytes = new Uint8Array(9);
+    crypto.getRandomValues(bytes);
+    uiController.setKey(GrilleLogic.keyFromRandom(bytes));
+    uiController.showGrilleMessage(t('key.random'), 'success');
+  });
+
+  document.getElementById('resetKey').addEventListener('click', () => {
+    uiController.setKey(GrilleLogic.DEFAULT_KEY);
+    uiController.showGrilleMessage(t('key.reset'), 'success');
+  });
+
+  document.querySelectorAll('input[name="direction"]').forEach(input => {
+    input.addEventListener('change', () => uiController.setDirection(input.value));
+  });
+
+  document.getElementById('loadPattern').addEventListener('click', () => {
+    const parsed = GrilleLogic.parseHolePattern(document.getElementById('patternText').value);
+    if (!parsed.ok) return showParseError(parsed);
+    uiController.setKey(parsed.key);
+    uiController.showGrilleMessage(t('pattern.loaded'), 'success');
+  });
+
+  document.getElementById('copyPattern').addEventListener('click', async () => {
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('clipboard');
+      await navigator.clipboard.writeText(document.getElementById('patternText').value);
+      uiController.showGrilleMessage(t('copy.done'), 'success');
+    } catch (_error) {
+      uiController.showGrilleMessage(t('copy.failed'), 'error');
     }
-  }
+  });
+
+  document.getElementById('loadSample').addEventListener('click', () => {
+    const id = document.getElementById('sampleSelect').value;
+    const sample = GrilleSamples.find(item => item.id === id);
+    if (!sample) return;
+    uiController.clearRuns();
+    uiController.setKey(sample.key);
+    uiController.setDirection(sample.direction);
+    document.getElementById('plainText').value = sample.plain;
+    document.getElementById('cipherInput').value = sample.cipher;
+    const name = t(sample.nameKey);
+    const note = sample.noteKey ? ` ${t(sample.noteKey)}` : '';
+    uiController.showGrilleMessage(t('sample.loaded', { name }) + note, 'success');
+    checkPlainTextAndUpdateButtons();
+    checkCipherTextAndUpdateButtons();
+  });
+
+  const randomButton = document.getElementById('randomKey');
+  randomButton.disabled = !globalThis.crypto || typeof globalThis.crypto.getRandomValues !== 'function';
 }
 
 // 平文入力チェック
@@ -204,12 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // グリル生成
   initBaseMatrix();
-  document.getElementById(CONFIG.DOM_IDS.GENERATE_GRILLE).addEventListener("click", () => {
-    uiController.generateGrille();
-    // グリル生成後、暗号化・復号化開始ボタンの状態をチェック
-    checkPlainTextAndUpdateButtons();
-    checkCipherTextAndUpdateButtons();
-  });
+  bindGrilleCreator();
 
   // タブ切り替え
   const tabs = document.querySelectorAll(".tab-button");

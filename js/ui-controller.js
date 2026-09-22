@@ -17,7 +17,9 @@ class UIController {
       recoveredText: '',
       
       // 共通
-      currentGrille: null
+      key: GrilleLogic.DEFAULT_KEY,
+      direction: 'cw',
+      currentGrille: GrilleLogic.keyToGrille(GrilleLogic.DEFAULT_KEY)
     };
   }
 
@@ -28,6 +30,126 @@ class UIController {
   // DOM要素の取得（キャッシュ）
   getElement(id) {
     return document.getElementById(id);
+  }
+
+  // グリル作成画面を初期化
+  initGrilleCreator() {
+    const matrix = this.getElement('baseMatrix');
+    matrix.replaceChildren();
+    for (let row = 0; row < GrilleLogic.HALF; row++) {
+      for (let col = 0; col < GrilleLogic.HALF; col++) {
+        const select = document.createElement('select');
+        select.dataset.row = row;
+        select.dataset.col = col;
+        select.setAttribute('aria-label', GrilleMessages.t('matrix.label', { row: row + 1, col: col + 1 }));
+        for (let value = 1; value <= 4; value++) {
+          const option = document.createElement('option');
+          option.value = String(value);
+          option.textContent = String(value);
+          select.appendChild(option);
+        }
+        matrix.appendChild(select);
+      }
+    }
+
+    const board = this.getElement('punchBoard');
+    board.replaceChildren();
+    for (let row = 0; row < GrilleLogic.SIZE; row++) {
+      for (let col = 0; col < GrilleLogic.SIZE; col++) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.row = row;
+        button.dataset.col = col;
+        button.addEventListener('pointerenter', () => this.highlightOrbit(row, col, true));
+        button.addEventListener('pointerleave', () => this.highlightOrbit(row, col, false));
+        button.addEventListener('focus', () => this.highlightOrbit(row, col, true));
+        button.addEventListener('blur', () => this.highlightOrbit(row, col, false));
+        button.addEventListener('click', () => this.setKey(GrilleLogic.punch(this.state.key, row, col)));
+        board.appendChild(button);
+      }
+    }
+
+    const samples = this.getElement('sampleSelect');
+    samples.replaceChildren();
+    GrilleSamples.forEach(sample => {
+      const option = document.createElement('option');
+      option.value = sample.id;
+      option.textContent = GrilleMessages.t(sample.nameKey);
+      samples.appendChild(option);
+    });
+    this.renderGrilleCreator();
+  }
+
+  // 4つの鍵表示を同じ状態から描画
+  renderGrilleCreator() {
+    const base = GrilleLogic.keyToBase(this.state.key);
+    document.querySelectorAll('#baseMatrix select').forEach(select => {
+      select.value = String(base[Number(select.dataset.row)][Number(select.dataset.col)]);
+    });
+    const holes = new Set(GrilleLogic.holesAt(this.state.key, 0, this.state.direction).map(cell => cell.join(',')));
+    document.querySelectorAll('#punchBoard button').forEach(button => {
+      const row = Number(button.dataset.row);
+      const col = Number(button.dataset.col);
+      const hole = holes.has(`${row},${col}`);
+      const info = GrilleLogic.cellInfo(row, col);
+      button.textContent = String(base[info.baseRow][info.baseCol]);
+      button.setAttribute('aria-pressed', String(hole));
+      button.setAttribute('aria-label', GrilleMessages.t(hole ? 'punch.hole' : 'punch.label', {
+        row: row + 1,
+        col: col + 1
+      }));
+      button.classList.toggle('is-hole', hole);
+    });
+    const keyInput = this.getElement('keyText');
+    if (document.activeElement !== keyInput) keyInput.value = this.state.key;
+    this.getElement('patternText').value = GrilleLogic.formatHolePattern(this.state.key);
+    this.getElement('directionCw').checked = this.state.direction === 'cw';
+    this.getElement('directionCcw').checked = this.state.direction === 'ccw';
+  }
+
+  highlightOrbit(row, col, active) {
+    const orbit = new Set(GrilleLogic.orbitOf(row, col).map(cell => cell.join(',')));
+    document.querySelectorAll('#punchBoard button').forEach(button => {
+      button.classList.toggle('is-orbit', active && orbit.has(`${button.dataset.row},${button.dataset.col}`));
+    });
+  }
+
+  clearRuns() {
+    this.state.encryptionGrid = this.createEmptyGrid();
+    this.state.plainChars = [];
+    this.state.rotationCount = 0;
+    this.state.decryptionGrid = this.createEmptyGrid();
+    this.state.cipherChars = [];
+    this.state.decryptionStep = 0;
+    this.state.recoveredText = '';
+    this.getElement('encryptionGrid').replaceChildren();
+    this.getElement('decryptionGrid').replaceChildren();
+    this.getElement('cipherText').value = '';
+    this.getElement('recoveredText').value = '';
+    this.getElement('nextRotation').disabled = true;
+    this.getElement('nextDecryption').disabled = true;
+  }
+
+  setKey(key) {
+    const parsed = GrilleLogic.parseKey(key);
+    if (!parsed.ok) return false;
+    const changed = parsed.key !== this.state.key;
+    this.state.key = parsed.key;
+    this.state.currentGrille = GrilleLogic.keyToGrille(parsed.key);
+    if (changed) this.clearRuns();
+    this.renderGrilleCreator();
+    return true;
+  }
+
+  setDirection(direction) {
+    const next = direction === 'ccw' ? 'ccw' : 'cw';
+    if (next !== this.state.direction) this.clearRuns();
+    this.state.direction = next;
+    this.renderGrilleCreator();
+  }
+
+  showGrilleMessage(message, type = 'info') {
+    NotificationSystem.show(message, type, 'grille-notifications', 0);
   }
 
   // グリッドスタイルの設定

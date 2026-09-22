@@ -221,11 +221,79 @@ button:disabled:hover {
 }
 
 /* グリルマトリクス */
-#baseMatrix, #grillePreview {
+.grille-editor-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.5rem;
+}
+
+#baseMatrix,
+.base-matrix {
   display: grid;
   grid-template-columns: repeat(3, 50px);
   gap: 6px;
   margin-top: 1em;
+}
+
+.base-matrix select {
+  min-height: 44px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.punch-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(40px, 1fr));
+  width: min(100%, 21rem);
+  border: 2px solid var(--cell-border);
+}
+
+.punch-board button {
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--cell-border);
+  border-radius: 0;
+  background: var(--cell-bg);
+  color: var(--text-primary);
+}
+
+.punch-board button:nth-child(6n + 3) {
+  border-right-width: 3px;
+}
+
+.punch-board button:nth-child(n + 13):nth-child(-n + 18) {
+  border-bottom-width: 3px;
+}
+
+.punch-board button.is-hole {
+  background: var(--cell-rotated);
+  box-shadow: inset 0 0 0 3px var(--border-focus);
+}
+
+.punch-board button.is-orbit {
+  outline: 3px solid var(--border-focus);
+  outline-offset: -4px;
+}
+
+.key-controls,
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+
+.key-controls input {
+  flex: 1 1 12rem;
+  width: auto;
+}
+
+fieldset,
+details {
+  margin-block: 1rem;
 }
 
 #grillePreview {
