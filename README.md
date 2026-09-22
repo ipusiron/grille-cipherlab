@@ -8,8 +8,8 @@ title: "Grille CipherLab"
 subtitle_ja: "回転グリル暗号の可視化ツール"
 subtitle_en: "Rotating Grille Cipher Visualization Tool"
 
-description_ja: "回転グリル暗号の鍵を4通りで編集し、複数ブロックの暗号化・復号を型紙の回転とともに学べるツール。埋め草と既知の見本も確認できます。"
-description_en: "An educational tool for editing rotating-grille keys in four forms and visualizing multi-block encryption, decryption, padding, and known examples."
+description_ja: "回転グリル暗号の作成・暗号化・復号・解読を体験し、印刷や鍵の共有もできる日英対応の学習ツール。"
+description_en: "A bilingual learning tool for creating, encrypting, decrypting, solving, printing, and sharing turning grilles."
 
 category_ja:
   - 古典暗号
@@ -24,6 +24,8 @@ tags:
   - rotating-grille-cipher
   - visualization
   - cryptography-education
+  - brute-force
+  - i18n
 
 repo_url: "https://github.com/ipusiron/grille-cipherlab"
 demo_url: "https://ipusiron.github.io/grille-cipherlab/"
@@ -44,7 +46,7 @@ hub: true
 
 **Day024 - 生成AIで作るセキュリティツール100**
 
-**Grille CipherLab**は、穴の開いた型紙を回して文字を配置する回転グリル暗号を体験するWebツールです。鍵を4通りで編集し、暗号化と復号を1回転ずつ確かめられます。複数ブロック、埋め草、ヴェルヌ『Mathias Sandorf』の既知解答にも対応しています。
+**Grille CipherLab**は、穴の開いた型紙を回して文字を配置する回転グリル暗号を体験するWebツールです。鍵の編集、暗号化・復号に加え、手作業の解読とトライグラム統計による総当たりを試せます。印刷、URL共有、日英表示にも対応しています。
 
 ## 🌐 デモページ
 
@@ -68,6 +70,18 @@ hub: true
 
 > *ダークモードで書籍の例を暗号化した2回目の状態。*
 
+![サンドルフの総当たり](assets/screenshot5.png)
+
+> *サンドルフの暗号文を仏語・両方向・逆順ありで総当たりし、正解のクラスが1位になった状態。*
+
+![解読の作業台](assets/screenshot6.png)
+
+> *書籍の暗号文を6×6の作業台へ置き、4回転ぶんの読み出しを確認した状態。*
+
+![英語表示](assets/screenshot7.png)
+
+> *英語表示で書籍の例を暗号化し、型紙を90°まで回した2回目の状態。*
+
 ## ✨ 主な機能
 
 - 3×3の数字・6×6の穴あけ盤・9桁の鍵・穴のパターンによる鍵の編集
@@ -76,6 +90,12 @@ hub: true
 - Xまたはランダムな英字による埋め草
 - 「最初へ」「戻る」「進む」「最後まで」による段階表示
 - 書籍の例・ヴェルヌの既知解答・短い文の見本
+- 穴を動かしながら4回転の読み出しを確認する解読作業台
+- 英語・フランス語のトライグラム統計による65,536クラスの総当たり
+- 18mm角の型紙と空の用紙の印刷
+- 鍵と向きだけを含む共有URL
+- Day009の頻度分析ツールへの暗号文の受け渡し
+- 日本語・英語の表示切り替え
 - ライト・ダーク・システム連動のテーマ
 - キーボード操作と幅320pxまでのレスポンシブ表示
 
@@ -92,6 +112,10 @@ hub: true
 ### 3. 復号する
 
 「復号」タブへ36文字の倍数の暗号文を入れ、「復号開始」を押します。暗号化と同じ操作で穴の文字を読みます。ヴェルヌの見本では、完了後に「逆順にする」を押すと小説の平文順になります。
+
+### 4. 解読する
+
+「解読」タブへ暗号文を入れ、「作業台に置く」を押します。6×6の穴を動かすと、現在の鍵による4回転の読み出しと得点がその場で変わります。「総当たり」では言語・回す向き・逆順の採点を指定し、上位10クラスから鍵を作業台または復号タブへ移せます。
 
 ## 🔑 鍵の表し方
 
@@ -138,6 +162,18 @@ eedgnc toeedt artuee
 
 本ツールでは、見本「ヴェルヌ『Mathias Sandorf』」を読み込み、復号して「逆順にする」を押すと再現できます。電子テキストや解説サイトには18語目に誤植のある版があります。本ツールのテストは、平文から逆算した上表の18語目で平文と一致することを確かめています。出所は[原文の電子テキスト](http://jv.gilead.org.il/ebooksgratuits/jules_verne_mathias_sandorf.html)です。
 
+## 🔓 解読を試す
+
+同じ型紙を90°ずつ回した4つの鍵は、読み始める回転だけが違う同値な鍵です。総当たりでは262,144鍵を65,536クラスにまとめ、各クラスで最も高い得点を表示します。ヴェルヌ『Mathias Sandorf』の本文は読み出した文字列を逆順にするため、「逆順も採点」を使います。
+
+| 暗号文 | 言語 | 1位の代表／最良の鍵 | 得点 | 逆順 |
+|---|---|---|---:|---|
+| TDHOAA PYHPEH UNFYAS MFNROH OLTIII NLMGYT | 英語 | 134432211／312214433 | -11694 | なし |
+| XAAXWT TNXAXX XXXCXX XXXXXK ATXDXX XXXXXX | 英語 | 134432211／241143322 | -16400 | なし |
+| IHNALZ…ARTUEE（108文字） | フランス語 | 142213124／213324231 | -34782 | あり |
+
+英語モデルはDay018 Cipher ClimbのProject Gutenberg 10作品・5,141,270字、フランス語モデルはProject Gutenberg 6作品・3,228,303字から作成したトライグラム統計です。総当たりは候補を順位づけする学習機能であり、「正解が見つからない」と判定する閾値は設けていません。
+
 ## ⌨️ キーボードショートカット
 
 | キー | 機能 | 条件 |
@@ -152,7 +188,7 @@ eedgnc toeedt artuee
 
 ## 🎨 テーマとヘルプ
 
-右上のテーマボタンは、ライト・ダーク・システム連動の順に切り替わります。保存できる環境ではテーマだけをlocalStorageへ保存します。❓は使い方、⌨️は同じヘルプのショートカット欄を開きます。Esc・閉じるボタン・背景のクリックで閉じ、開いたボタンへフォーカスが戻ります。
+右上のテーマボタンは、ライト・ダーク・システム連動の順に切り替わります。EN／JAボタンは画面・ヘルプ・動的な結果を日本語と英語の間で切り替えます。保存できる環境ではテーマと言語をlocalStorageへ保存します。❓は使い方、⌨️は同じヘルプのショートカット欄を開きます。Esc・閉じるボタン・背景のクリックで閉じ、開いたボタンへフォーカスが戻ります。
 
 ## 🌀 回転グリル暗号とは
 
@@ -192,14 +228,26 @@ eedgnc toeedt artuee
 
 暗号ロジックはDOMに依存しない`GrilleLogic`へ分離しています。暗号化・復号の画面状態は「済んだ回数」`done`を1つ持ち、`encryptionView`と`decryptionView`がその値から毎回表示内容を導きます。紙の文字は固定し、型紙だけをCSSの`transform`で回します。
 
+解読は`GrilleSolver`が担当します。トライグラムの出現確率の常用対数を100倍して丸め、未出現の並びには言語ごとのfloor値を使います。ブラウザーでは4,096鍵ずつ分割して処理するため、進捗の更新と中断ができます。
+
 1つの鍵から、3×3の数字・6×6の穴あけ盤・9桁の鍵・穴のパターンを描きます。表示サイズは6×6に固定しており、大きさの変更には対応していません。詳しくは[technical_info.md](technical_info.md)を参照してください。
+
+## 🖨️ 印刷して使う
+
+「型紙を印刷」は、18mm角の6×6型紙と空の用紙だけを印刷します。型紙の黒い9マスを切り抜き、用紙の▲を上にして重ねると紙でも4回転を試せます。ブラウザーの印刷設定では倍率100%を選び、プレビューで1マス18mmになることを確認してください。
+
+## 🔗 鍵の共有とDay009との連携
+
+「共有URLをコピー」は、`#k=241143322&d=cw`のように鍵と向きだけをハッシュへ入れます。平文と暗号文はURLへ含めません。
+
+回転グリル暗号は文字の位置だけを入れ替える転置暗号なので、暗号文の文字頻度は平文と同じです。「頻度分析（Day009）で見る」から暗号文を渡すと、英語のE・T・Aなどの頻度に近いかを確認でき、換字暗号との違いを観察できます。リンクを開くまでは外部通信を行いません。
 
 ## 🔒 セキュリティ
 
 - CSPとreferrer policyをmeta要素で設定
 - 外部API・CDN・Webフォントへの通信なし
 - 利用者の入力は`textContent`またはフォームの`value`で表示
-- localStorageへ保存するのはテーマだけ
+- localStorageへ保存するのはテーマと言語だけ
 - ランダムな鍵と埋め草は`crypto.getRandomValues`を使用
 - 外部リンクに`rel="noopener noreferrer"`を指定
 
@@ -213,7 +261,7 @@ Node.js 22以上で次を実行します。npm依存パッケージはありま�
 npm test
 ```
 
-`node --test`で、全262,144鍵、暗号化と復号の往復、画面状態、CSP・ARIA、コントラスト、READMEの表、ヴェルヌの既知解答を検証します。GitHub Actionsでもpushとpull_requestのたびに実行します。
+`node --test`で、全262,144鍵、暗号化と復号の往復、画面状態、CSP・ARIA、コントラスト、READMEの表、ヴェルヌの既知解答を検証します。第2弾では`ngram.test.js`・`solver.test.js`・`share.test.js`・`i18n.test.js`も加え、統計モデル、総当たり順位、共有URL、日英辞書と英語READMEを照合します。GitHub Actionsでもpushとpull_requestのたびに実行します。
 
 ## 📁 ディレクトリー構造
 
@@ -229,32 +277,43 @@ grille-cipherlab/                      # 回転グリル暗号の仕組みを体
 │   ├── screenshot.png                 # グリル作成タブ（3×3の数字・6×6の穴あけ盤・鍵）
 │   ├── screenshot2.png                # 暗号化タブ（書籍の例の2回目。型紙が90°回った状態）
 │   ├── screenshot3.png                # 復号タブ（サンドルフの見本を最後まで復号し、逆順にした状態）
-│   └── screenshot4.png                # ダークモードの暗号化タブ
+│   ├── screenshot4.png                # ダークモードの暗号化タブ
+│   ├── screenshot5.png                # 解読タブ（サンドルフの総当たり。1位が正解のクラス・逆順）
+│   ├── screenshot6.png                # 解読タブの作業台（書籍の暗号文と4回転ぶんの読み出し）
+│   └── screenshot7.png                # 英語表示（English UI）の暗号化タブ
 ├── CLAUDE.md                          # AI向けの開発ガイド
-├── index.html                         # 画面のマークアップ（グリル作成・暗号化・復号の3タブとヘルプ）
+├── index.html                         # 画面のマークアップ（4タブ、ヘルプ、印刷用の型紙）
 ├── js/                                # JavaScript（classic script。読み込み順はindex.htmlの末尾）
-│   ├── config.js                      # 画面側の定数（要素のid・CSSのクラス名・ショートカットのキー）
+│   ├── config.js                      # 画面側の定数（要素のid・CSSのクラス名・保存キー）
 │   ├── grille-cipher-logic.js         # 画面に依存しない純粋なロジック（鍵・穴・暗号化・復号・画面の状態。Nodeのテストからも読む）
+│   ├── grille-solver-logic.js         # 解読のロジック（同値クラス・採点・作業台・総当たり）
+│   ├── ngram-models.js                # 採点用の文字トライグラム統計（英語・フランス語。自動生成）
+│   ├── share.js                       # URLの鍵（#k=…&d=…）の読み書き
 │   ├── keyboard-shortcuts.js          # キーボードショートカット（操作要素にフォーカスがないときだけ効く）
-│   ├── main-refactored.js             # 初期化とイベントの登録
-│   ├── messages.js                    # 画面の文言の辞書と、キーから文を作る関数
+│   ├── main-refactored.js             # 初期化とイベントの登録（共有・言語切り替えを含む）
+│   ├── messages.js                    # 画面の文言の日英辞書と、キーから文を作る関数
 │   ├── notification-system.js         # 通知の表示（role="status"の欄へtextContentで出す）
 │   ├── samples.js                     # 見本3件（書籍の例・サンドルフ・短い文）
 │   ├── theme-manager.js               # ライト・ダーク・システム連動の切り替えと保存
-│   └── ui-controller.js               # 画面の状態と描画（4つの鍵の表示・重ね表示の盤・進行）
+│   └── ui-controller.js               # 画面の状態と描画（作業台・総当たり結果を含む）
 ├── LICENSE                            # MITライセンス
 ├── package.json                       # 依存なしのnpm test定義
-├── README.md                          # 本ドキュメント
-├── style.css                          # CSS変数の配色（ライト・ダーク）とレスポンシブレイアウト
+├── README.md                          # 本ドキュメント（日本語）
+├── README.en.md                       # 英語版のドキュメント
+├── style.css                          # 配色・レスポンシブレイアウト・印刷用の型紙
 ├── technical_info.md                  # 実装の技術メモ（READMEの「技術的な説明」の詳細）
 └── test/                              # node --testの自動テスト（依存なし）
     ├── contrast.test.js               # 文字色と面のコントラストの検証（型紙の下の文字を含む）
     ├── format.test.js                 # 行長と読みやすさの検証
     ├── html.test.js                   # CSP・ARIA・id・インライン属性なしの検証
+    ├── i18n.test.js                   # 日本語と英語の辞書、README.en.mdの検証
     ├── logic.test.js                  # 鍵・穴・正規化・暗号化・復号・往復・全262,144鍵の検証
     ├── messages.test.js               # 文言の辞書と、画面側が使うキーの検証
+    ├── ngram.test.js                  # トライグラム統計の値・出所・ハッシュの検証
     ├── readme.test.js                 # 表・画像・ツリー・YAMLの検証
     ├── samples.test.js                # 見本とヴェルヌの既知解答の検証
+    ├── share.test.js                  # URLの鍵の読み書きの検証
+    ├── solver.test.js                 # 同値クラス・採点・総当たり・作業台の検証
     ├── static.test.js                 # 純粋性・禁止している書き方・CI設定の検証
     └── views.test.js                  # 画面の状態（済んだ回数から描く内容）の検証
 ```
