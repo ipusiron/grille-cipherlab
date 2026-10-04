@@ -68,3 +68,9 @@ test('textareas, external links, and Japanese terminology meet the contract', ()
   assert.equal((html.match(/href="https:\/\/ipusiron\.github\.io\/frequency-analyzer\/"/g) || []).length, 2);
   assert.doesNotMatch(html, /fonts\.googleapis\.com|復号化|全ての/);
 });
+
+test('頻度分析（Day009）へは「#」より後ろで渡す（サーバーへ送られない）', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'ui-controller.js'), 'utf8');
+  assert.ok(src.includes('https://ipusiron.github.io/frequency-analyzer/#text=${encodeURIComponent(value)}'));
+  assert.ok(!src.includes('frequency-analyzer/?text='));
+});
