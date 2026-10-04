@@ -113,7 +113,7 @@ Print grille produces only a 6×6 grille and blank sheet with 18 mm cells. Cut o
 
 A sharing URL such as `#k=241143322&d=cw` contains only the key and direction. It never includes plaintext or ciphertext.
 
-A turning grille is a transposition cipher, so ciphertext has the same letter frequencies as plaintext. Open the ciphertext in the Day009 Frequency Analyzer to compare it with common English frequencies such as E, T, and A. No external request occurs until the link is opened.
+A turning grille is a transposition cipher, so ciphertext has the same letter frequencies as plaintext. Open the ciphertext in the Day009 Frequency Analyzer to compare it with common English frequencies such as E, T, and A. No external request occurs until the link is opened. The ciphertext goes after the `#` in the URL, so it is not sent to the server.
 
 ## 🔒 Security
 

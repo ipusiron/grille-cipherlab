@@ -444,7 +444,8 @@ class UIController {
     const value = String(text || '');
     link.hidden = !value;
     link.href = value
-      ? `https://ipusiron.github.io/frequency-analyzer/?text=${encodeURIComponent(value)}`
+      // 「#」より後ろで渡す（サーバーへ送られず、URLの長さの上限もない。Day009は#text=を先に読む）
+      ? `https://ipusiron.github.io/frequency-analyzer/#text=${encodeURIComponent(value)}`
       : 'https://ipusiron.github.io/frequency-analyzer/';
   }
 
