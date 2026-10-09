@@ -167,3 +167,20 @@ test('documented tree covers every repository file and directory', () => {
 test('retired or inaccurate terminology is absent', () => {
   assert.doesNotMatch(readme, /グリフ|復号化|ルネサンス期|通常9個|CONFIG\.GRILLE_SIZE|npx serve|artnee/i);
 });
+
+test('ユースケースの「このツールならではの使い方」を grille-cipher-logic.js で再計算（日英）', () => {
+  const en = fs.readFileSync(path.join(root, 'README.en.md'), 'utf8');
+  assert.equal(GrilleLogic.SIZE * GrilleLogic.SIZE, 36);
+  assert.equal(GrilleLogic.BLOCK, 36);
+  assert.equal(GrilleLogic.HOLES * 4, 36);
+  assert.equal(GrilleLogic.KEY_COUNT, 4 ** 9);
+  assert.equal(GrilleLogic.KEY_COUNT, 262144);
+  const e = GrilleLogic.encrypt('MEETMEATNOON', GrilleLogic.DEFAULT_KEY);
+  assert.ok(e.ok);
+  const d = GrilleLogic.decrypt(e.ciphertext, GrilleLogic.DEFAULT_KEY);
+  assert.ok(d.plaintext.startsWith('MEETMEATNOON'));
+  for (const md of [readme, en]) {
+    assert.ok(md.includes('262,144') && md.includes('36'));
+    assert.ok(md.includes('MEETMEATNOON'));
+  }
+});

@@ -115,6 +115,20 @@ A sharing URL such as `#k=241143322&d=cw` contains only the key and direction. I
 
 A turning grille is a transposition cipher, so ciphertext has the same letter frequencies as plaintext. Open the ciphertext in the Day009 Frequency Analyzer to compare it with common English frequencies such as E, T, and A. No external request occurs until the link is opened. The ciphertext goes after the `#` in the URL, so it is not sent to the server.
 
+## 🎯 Use cases
+
+### Ways of using this tool in particular
+
+- Confirming that 9 holes over 4 rotations cover 36 cells once each (rotation and combinatorics classes): punch 9 holes in a 6x6 = 36-cell grid and rotate it four times (0, 90, 180, 270 degrees); each turn exposes a different 9 cells, and 9 x 4 = 36 cover every cell exactly once. You can confirm, by the cell count, how a turning grille places holes so they never overlap
+- Confirming that the number of keys is 4 to the 9th (counting classes): the hole positions split into 9 rotation groups (orbits), and each chooses one of 4 directions. The choices multiply, 4 x 4 x ... = 4 to the 9th, so the total number of keys is 262,144. You can confirm the idea of counting cases by the product of independent choices
+- Confirming that it is a transposition, so letters stay and only positions change (transposition-cipher classes): encrypting MEETMEATNOON keeps the letters and rearranges them into other positions in the grid (with filler for the empty cells). Decrypting with the same key returns MEETMEATNOON. You can confirm, by encrypting and decrypting, that it is a transposition that swaps positions rather than replacing letters
+
+### General uses
+
+- Learn how a turning grille cipher (a kind of Cardan grille) works in class or self-study
+- Make a cipher using a grille stencil for puzzles and events
+- Use it as material to count the keys and the difficulty of a brute force for a transposition cipher
+
 ## 🔒 Security
 
 All processing is local. A restrictive CSP blocks network connections, and generated UI content is inserted with DOM APIs and `textContent`.
