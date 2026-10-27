@@ -308,6 +308,7 @@ grille-cipherlab/                      # 回転グリル暗号の仕組みを体
 │   ├── messages.js                    # 画面の文言の日英辞書と、キーから文を作る関数
 │   ├── notification-system.js         # 通知の表示（role="status"の欄へtextContentで出す）
 │   ├── samples.js                     # 見本3件（書籍の例・サンドルフ・短い文）
+│   ├── theme-init.js                  # 最初の描画の前にテーマを決める（<head>で読み込む）
 │   ├── theme-manager.js               # ライト・ダーク・システム連動の切り替えと保存
 │   └── ui-controller.js               # 画面の状態と描画（作業台・総当たり結果を含む）
 ├── LICENSE                            # MITライセンス
@@ -329,6 +330,7 @@ grille-cipherlab/                      # 回転グリル暗号の仕組みを体
     ├── share.test.js                  # URLの鍵の読み書きの検証
     ├── solver.test.js                 # 同値クラス・採点・総当たり・作業台の検証
     ├── static.test.js                 # 純粋性・禁止している書き方・CI設定の検証
+    ├── theme-init.test.js             # テーマの初期判定と<head>での読み込み位置の検証
     └── views.test.js                  # 画面の状態（済んだ回数から描く内容）の検証
 ```
 

@@ -168,6 +168,7 @@ grille-cipherlab/                      # Web tool for exploring the turning gril
 │   ├── messages.js                    # Japanese and English dictionaries and formatter
 │   ├── notification-system.js         # Status messages rendered with textContent
 │   ├── samples.js                     # Three bundled examples
+│   ├── theme-init.js                  # Theme decision before the first paint (loaded in <head>)
 │   ├── theme-manager.js               # Theme switching and persistence
 │   └── ui-controller.js               # UI state, workbench, and result rendering
 ├── LICENSE                            # MIT License
@@ -189,6 +190,7 @@ grille-cipherlab/                      # Web tool for exploring the turning gril
     ├── share.test.js                  # URL hash parsing and formatting
     ├── solver.test.js                 # Equivalence, scores, ranks, and workbench
     ├── static.test.js                 # Purity, prohibited APIs, and CI settings
+    ├── theme-init.test.js             # Initial theme decision and its <head> load position
     └── views.test.js                  # Derived encryption and decryption views
 ```
 

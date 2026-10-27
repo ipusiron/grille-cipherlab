@@ -21,7 +21,7 @@ test('security metadata and local classic resources are present', () => {
 
 test('scripts load in the required dependency order', () => {
   const expected = [
-    'config', 'grille-cipher-logic', 'ngram-models', 'grille-solver-logic', 'share', 'messages', 'samples', 'notification-system',
+    'theme-init', 'config', 'grille-cipher-logic', 'ngram-models', 'grille-solver-logic', 'share', 'messages', 'samples', 'notification-system',
     'ui-controller', 'keyboard-shortcuts', 'theme-manager', 'main-refactored'
   ];
   const actual = [...html.matchAll(/<script\s+src="js\/([^"]+)\.js"/g)].map(match => match[1]);
