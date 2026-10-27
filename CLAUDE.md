@@ -23,8 +23,9 @@ This file provides development guidance for Grille CipherLab, an educational rot
 - `js/main-refactored.js`: initialization and event registration.
 - `js/notification-system.js`: persistent status messages.
 - `js/keyboard-shortcuts.js`: shortcuts that defer to focused controls.
+- `js/theme-init.js`: applies the stored or OS theme to `<html>` before the first paint; loaded synchronously in `<head>`.
 - `js/theme-manager.js`: light, dark, and automatic theme selection.
-- `test/`: 13 dependency-free `node:test` files, including all keys, known answers, solving, sharing, and i18n.
+- `test/`: 14 dependency-free `node:test` files, including all keys, known answers, solving, sharing, and i18n.
 
 Classic scripts load in the order declared at the end of `index.html`. Do not convert them to ES modules because direct `file://` use is supported.
 

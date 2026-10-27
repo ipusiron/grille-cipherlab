@@ -1,10 +1,11 @@
 // Theme selection with a system-following default.
+// js/theme-init.js applies the initial class in <head>; this class syncs the button and handles changes.
 
 class ThemeManager {
   constructor() {
     this.media = window.matchMedia('(prefers-color-scheme: dark)');
     this.currentTheme = this.readTheme();
-    this.applyTheme(this.currentTheme, false);
+    this.updateToggleButton();
     this.media.addEventListener('change', () => {
       if (this.currentTheme === CONFIG.THEME.AUTO) this.applyTheme(CONFIG.THEME.AUTO, false);
     });
@@ -31,7 +32,7 @@ class ThemeManager {
 
   applyTheme(theme, save) {
     this.currentTheme = theme;
-    document.body.classList.toggle(CONFIG.THEME.CSS_CLASS, this.isDarkMode());
+    document.documentElement.classList.toggle(CONFIG.THEME.CSS_CLASS, this.isDarkMode());
     if (save) this.saveTheme(theme);
     this.updateToggleButton();
   }
