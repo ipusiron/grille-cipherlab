@@ -275,7 +275,7 @@ Node.js 22以上で次を実行します。npm依存パッケージはありま�
 npm test
 ```
 
-`node --test`で、全262,144鍵、暗号化と復号の往復、画面状態、CSP・ARIA、コントラスト、READMEの表、ヴェルヌの既知解答を検証します。第2弾では`ngram.test.js`・`solver.test.js`・`share.test.js`・`i18n.test.js`も加え、統計モデル、総当たり順位、共有URL、日英辞書と英語READMEを照合します。GitHub Actionsでもpushとpull_requestのたびに実行します。
+`node --test`で、全262,144鍵、暗号化と復号の往復、画面状態、CSP・ARIA、コントラスト、READMEの表、ヴェルヌの既知解答を検証します。`ngram.test.js`・`solver.test.js`・`share.test.js`・`i18n.test.js`では、統計モデル、総当たり順位、共有URL、日英辞書と英語READMEを照合します。GitHub Actionsでもpushとpull_requestのたびに実行します。
 
 ## 📁 ディレクトリー構造
 
