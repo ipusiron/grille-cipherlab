@@ -18,7 +18,7 @@ category_en:
   - Classical Cryptography
   - Transposition Cipher
 
-difficulty: 3
+difficulty: 2
 
 tags:
   - rotating-grille-cipher
